@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: 9b773ac8-ab21-4473-8a58-7af3b6a62cce
+
+localResources:
+  collections:
+    - ../backend/postman/KantinFlow-SIM.postman_collection.json
+
+cloudResources:
+  collections:
+    ../postman/collections/KantinFlow SIM - Login dan Penerimaan Stok: 585238cc-bc0f-4148-b2f6-8a4298f9cf3d

@@ -1,0 +1,124 @@
+import { randomBytes } from 'node:crypto';
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import { test } from 'node:test';
+import jwt from 'jsonwebtoken';
+import { MongoClient, ObjectId } from 'mongodb';
+import { createApp } from './app.mjs';
+import { hashPassword } from './password.mjs';
+import { prepareReceiptStore } from './receipt-store.mjs';
+
+const uri = process.env.TEST_MONGODB_URI;
+const loginError = { error: { code: 'INVALID_CREDENTIALS' } };
+
+test('login issues a token that records a stock receipt', { skip: !uri }, async (t) => {
+  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 6000 });
+  await client.connect();
+  const isolationId = randomBytes(12).toString('hex');
+  const db = client.db('kantinflow_test_' + isolationId);
+  t.after(async () => {
+    try {
+      await db.dropDatabase();
+    } finally {
+      await client.close();
+    }
+  });
+
+  const secret = randomBytes(32).toString('hex');
+  const password = randomBytes(18).toString('base64url');
+  const passwordHash = await hashPassword(password);
+  const itemId = new ObjectId();
+  const staffId = new ObjectId();
+  const inactiveId = new ObjectId();
+  const email = 'petugas@kantinflow.test';
+
+  await prepareReceiptStore(db);
+  await db.collection('items').insertOne({
+    _id: itemId, name: 'Susu Kotak', baseUnit: 'kotak', quantityScale: 0,
+  });
+  await db.collection('users').insertMany([
+    {
+      _id: staffId, name: 'Petugas Demo', email, role: 'staff', isActive: true, passwordHash,
+    },
+    {
+      _id: inactiveId, name: 'Petugas Nonaktif', email: 'nonaktif@kantinflow.test',
+      role: 'staff', isActive: false, passwordHash,
+    },
+  ]);
+
+  const server = createApp({ client, db, jwtSecret: secret, tokenTtl: '5m' }).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+  async function login(payload) {
+    const response = await fetch(baseUrl + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return { status: response.status, body: await response.json() };
+  }
+
+  async function postReceipt(payload, key, token) {
+    const response = await fetch(baseUrl + '/api/v1/stock/receipts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    return { status: response.status, body: await response.json() };
+  }
+
+  const success = await login({ email: '  ' + email.toUpperCase() + ' ', password });
+  assert.equal(success.status, 200);
+  assert.equal(typeof success.body.data.token, 'string');
+  assert.deepEqual(success.body.data.user, {
+    id: staffId.toHexString(), name: 'Petugas Demo', email, role: 'staff',
+  });
+  assert.equal(JSON.stringify(success.body).includes(passwordHash), false);
+  assert.equal('passwordHash' in success.body.data.user, false);
+
+  const claims = jwt.verify(success.body.data.token, secret, { algorithms: ['HS256'] });
+  assert.equal(claims.sub, staffId.toHexString());
+  assert.ok(claims.exp > claims.iat);
+
+  const wrongEmail = await login({ email: 'tidak-ada@kantinflow.test', password });
+  const wrongPassword = await login({ email, password: password + 'x' });
+  const inactive = await login({ email: 'nonaktif@kantinflow.test', password });
+  for (const attempt of [wrongEmail, wrongPassword, inactive]) {
+    assert.deepEqual(attempt, { status: 401, body: loginError });
+  }
+
+  const missing = await login({ email: '', password: '' });
+  assert.equal(missing.status, 400);
+  assert.deepEqual(Object.keys(missing.body.error.fields).sort(), ['email', 'password']);
+
+  const receipt = {
+    itemId: itemId.toHexString(),
+    batchCode: 'SUSU-LOGIN-1',
+    quantity: '5',
+    unitCost: '4500.00',
+    receivedOn: '2026-11-17',
+    expiresOn: '2026-11-24',
+  };
+  const first = await postReceipt(receipt, 'login-flow', success.body.data.token);
+  assert.equal(first.status, 201);
+  assert.equal(first.body.data.stockBalance, '5');
+  assert.equal(first.body.data.unit, 'kotak');
+
+  const replay = await postReceipt(receipt, 'login-flow', success.body.data.token);
+  assert.deepEqual(replay, { status: 200, body: first.body });
+
+  const zero = await postReceipt({ ...receipt, quantity: '0' }, 'login-zero', success.body.data.token);
+  assert.deepEqual(zero, {
+    status: 400,
+    body: { error: { code: 'VALIDATION_ERROR', fields: { quantity: 'Jumlah harus lebih dari 0' } } },
+  });
+
+  assert.equal(await db.collection('batches').countDocuments(), 1);
+  assert.equal(await db.collection('stockTransactions').countDocuments(), 1);
+});

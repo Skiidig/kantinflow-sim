@@ -1,0 +1,28 @@
+$kind: http-request
+description: Isi variabel password terlebih dahulu. Token hasil login otomatis masuk ke variabel token.
+url: "{{baseUrl}}/api/v1/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}",
+      "password": "{{password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('Status 200', () => pm.response.to.have.status(200));
+      pm.test('Token disimpan ke variabel koleksi', () => {
+        pm.expect(body.data.token).to.be.a('string').and.not.empty;
+        pm.collectionVariables.set('token', body.data.token);
+      });
+      pm.test('Profil minimal tanpa hash password', () => {
+        pm.expect(body.data.user).to.not.have.property('passwordHash');
+        pm.expect(body.data.user).to.have.all.keys('id', 'name', 'email', 'role');
+      });
+    language: text/javascript
+order: 1000

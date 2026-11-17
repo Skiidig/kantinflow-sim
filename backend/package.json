@@ -1,0 +1,17 @@
+{
+  "name": "kantinflow-sim-backend",
+  "private": true,
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "db:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-mongodb.ps1",
+    "db:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-mongodb.ps1",
+    "seed": "node --env-file-if-exists=.env scripts/seed-demo.mjs",
+    "seed:reset": "node --env-file-if-exists=.env scripts/seed-demo.mjs --reset",
+    "test": "node --env-file-if-exists=.env --test"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "jsonwebtoken": "9.0.3",
+    "mongodb": "7.9.0"
+  }
+}

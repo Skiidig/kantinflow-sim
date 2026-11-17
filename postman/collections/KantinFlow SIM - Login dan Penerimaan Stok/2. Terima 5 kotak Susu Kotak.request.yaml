@@ -1,0 +1,32 @@
+$kind: http-request
+description: Memakai token dari request login. Idempotency-Key tetap agar pengiriman ulang tidak menggandakan stok.
+url: "{{baseUrl}}/api/v1/stock/receipts"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+  Idempotency-Key: demo-receipt-5-kotak
+body:
+  type: json
+  content: |-
+    {
+      "itemId": "{{itemId}}",
+      "batchCode": "SUSU-DEMO-01",
+      "quantity": "5",
+      "unitCost": "4500.00",
+      "receivedOn": "2026-11-17",
+      "expiresOn": "2026-11-24"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('Diterima 201 atau replay idempoten 200', () => {
+        pm.expect([200, 201]).to.include(pm.response.code);
+      });
+      pm.test('Saldo menjadi 5 kotak', () => {
+        pm.expect(body.data.stockBalance).to.eql('5');
+        pm.expect(body.data.unit).to.eql('kotak');
+      });
+    language: text/javascript
+order: 2000

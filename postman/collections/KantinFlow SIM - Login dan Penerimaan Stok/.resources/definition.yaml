@@ -1,0 +1,8 @@
+$kind: collection
+description: "Urutan: (1) Login petugas untuk menyimpan token, (2) Terima 5 kotak Susu Kotak, (3) Tolak jumlah 0. Sebelum mulai, jalankan npm.cmd run seed:reset lalu salin itemId dari keluaran seed ke variabel koleksi itemId. Contoh mengasumsikan saldo awal 0."
+variables:
+  baseUrl: http://127.0.0.1:3000
+  email: petugas@kantinflow.local
+  password: ""
+  token: ""
+  itemId: ""
