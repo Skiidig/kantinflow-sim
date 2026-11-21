@@ -54,43 +54,14 @@ export default function LoginScreen({ onLogin, notice }) {
 
   return (
     <main className="login-page">
-      <section className="login-brand" aria-label="KantinFlow SIM">
-        <div className="brand-lockup brand-lockup--light">
+      <div className="login-shell">
+        <div className="brand-lockup login-brand-lockup">
           <span className="brand-mark" aria-hidden="true">KF</span>
           <span className="brand-name">KantinFlow <em>SIM</em></span>
         </div>
 
-        <div className="brand-copy">
-          <p className="eyebrow eyebrow--light">Operasional kantin</p>
-          <h1>Stok masuk rapi, saldo langsung jelas.</h1>
-          <p className="brand-lede">
-            Catat barang datang dan lihat saldo terbaru tanpa menunggu rekap manual.
-          </p>
-        </div>
-
-        <div className="brand-receipt" aria-hidden="true">
-          <div className="brand-receipt-top">
-            <span className="product-dot">S</span>
-            <div>
-              <strong>Susu Kotak</strong>
-              <span>Batch SUSU-DEMO-01</span>
-            </div>
-            <span className="brand-plus">+5</span>
-          </div>
-          <div className="brand-meter"><span /></div>
-          <div className="brand-receipt-bottom">
-            <span>Saldo terkini</span>
-            <strong>5 kotak</strong>
-          </div>
-        </div>
-
-        <p className="brand-foot">KantinFlow SIM · Stok &amp; Pemantauan Kedaluwarsa</p>
-      </section>
-
-      <section className="login-panel">
-        <div className="login-form-wrap">
-          <p className="eyebrow">Selamat datang kembali</p>
-          <h2>Masuk ke KantinFlow</h2>
+        <section className="login-card" aria-labelledby="login-title">
+          <h1 id="login-title">Masuk ke KantinFlow</h1>
           <p className="lede">Gunakan akun admin atau petugas untuk mengelola stok kantin.</p>
 
           {notice && (
@@ -159,8 +130,10 @@ export default function LoginScreen({ onLogin, notice }) {
               Password ada di <code>backend/.env</code>.
             </p>
           )}
-        </div>
-      </section>
+        </section>
+
+        <p className="login-foot">KantinFlow SIM · Pengelolaan stok &amp; kedaluwarsa kantin</p>
+      </div>
     </main>
   );
 }

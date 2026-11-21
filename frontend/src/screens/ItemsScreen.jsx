@@ -9,6 +9,7 @@ import {
   updateItem,
 } from '../api.js';
 import { formatDateId, formatRupiah, getBatchStatusMeta } from '../format.js';
+import Icon from '../components/Icon.jsx';
 
 const EMPTY_FORM = {
   code: '',
@@ -305,17 +306,17 @@ export default function ItemsScreen({
     <div className="page-container">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Katalog &amp; batch persediaan</p>
-          <h1>Manajemen Barang</h1>
+          <h1>Barang &amp; batch</h1>
           <p className="lede">
-            Cari barang berdasarkan nama atau kode, pantau stok layak vs fisik, dan periksa detail setiap batch.
+            Cari barang, pantau stok layak dan fisik, lalu periksa detail batch.
           </p>
         </div>
 
         {isAdmin && (
           <div className="heading-actions">
             <button type="button" className="btn-primary" onClick={openCreateModal}>
-              + Tambah Barang
+              <Icon name="plus" size={16} />
+              Tambah Barang
             </button>
           </div>
         )}
@@ -392,7 +393,7 @@ export default function ItemsScreen({
       )}
 
       {/* Items Table */}
-      <section className="card panel-card">
+      <section className="card panel-card table-card">
         {loading ? (
           <div className="loading-panel" role="status">
             <span className="spinner spinner--dark" aria-hidden="true" />
@@ -421,7 +422,10 @@ export default function ItemsScreen({
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className={!item.isActive ? 'row-muted' : undefined}>
+                    <tr
+                      key={item.id}
+                      className={!item.isActive ? 'row-muted' : undefined}
+                    >
                       <td className="mono">{item.code}</td>
                       <td>
                         <strong>{item.name}</strong>
@@ -452,6 +456,7 @@ export default function ItemsScreen({
                           <button
                             type="button"
                             className="btn-table"
+                            aria-label={`Lihat batch ${item.name}`}
                             onClick={() => {
                               setOnlyRemaining(false);
                               setBatchItemId(item.id);
@@ -464,6 +469,7 @@ export default function ItemsScreen({
                               <button
                                 type="button"
                                 className="btn-table"
+                                aria-label={`Ubah ${item.name}`}
                                 onClick={() => openEditModal(item)}
                               >
                                 Ubah
@@ -472,6 +478,7 @@ export default function ItemsScreen({
                                 <button
                                   type="button"
                                   className="btn-table btn-table--danger"
+                                  aria-label={`Hapus atau arsipkan ${item.name}`}
                                   onClick={() => setConfirmItem(item)}
                                 >
                                   Hapus / Arsip
@@ -480,6 +487,7 @@ export default function ItemsScreen({
                                 <button
                                   type="button"
                                   className="btn-table"
+                                  aria-label={`Aktifkan ${item.name}`}
                                   onClick={() => handleReactivate(item)}
                                 >
                                   Aktifkan
@@ -508,7 +516,8 @@ export default function ItemsScreen({
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Sebelumnya
+                  <Icon name="chevronLeft" size={14} />
+                  Sebelumnya
                 </button>
                 <button
                   type="button"
@@ -516,7 +525,8 @@ export default function ItemsScreen({
                   disabled={meta.totalPages === 0 || page >= meta.totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Berikutnya →
+                  Berikutnya
+                  <Icon name="chevronRight" size={14} />
                 </button>
               </div>
             </div>
@@ -536,10 +546,12 @@ export default function ItemsScreen({
           >
             <div className="modal-header">
               <div>
-                <p className="eyebrow">{modalMode === 'create' ? 'Barang baru' : 'Ubah barang'}</p>
                 <h2 id="item-modal-title">
                   {modalMode === 'create' ? 'Tambah Barang Baru' : `Ubah ${editingItem?.name}`}
                 </h2>
+                <p className="modal-subtitle">
+                  Lengkapi kode, satuan, dan batas stok minimum barang.
+                </p>
               </div>
               <button
                 type="button"
@@ -547,7 +559,7 @@ export default function ItemsScreen({
                 onClick={closeFormModal}
                 aria-label="Tutup dialog"
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -648,8 +660,8 @@ export default function ItemsScreen({
           >
             <div className="modal-header">
               <div>
-                <p className="eyebrow">Konfirmasi aksi</p>
                 <h2 id="confirm-delete-title">Hapus atau Arsipkan Barang?</h2>
+                <p className="modal-subtitle">Tindakan mengikuti riwayat stok barang ini.</p>
               </div>
               <button
                 type="button"
@@ -657,7 +669,7 @@ export default function ItemsScreen({
                 onClick={() => !deleting && setConfirmItem(null)}
                 aria-label="Tutup dialog"
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -705,10 +717,10 @@ export default function ItemsScreen({
           >
             <div className="modal-header">
               <div>
-                <p className="eyebrow">Detail batch (Urutan FEFO)</p>
                 <h2 id="batch-modal-title">
                   {batchData?.item ? `${batchData.item.name} (${batchData.item.code})` : 'Daftar Batch Barang'}
                 </h2>
+                <p className="modal-subtitle">Batch diurutkan sesuai aturan FEFO.</p>
               </div>
               <button
                 type="button"
@@ -716,7 +728,7 @@ export default function ItemsScreen({
                 onClick={() => setBatchItemId(null)}
                 aria-label="Tutup detail batch"
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -775,7 +787,10 @@ export default function ItemsScreen({
                     {batchData.batches.map((batch) => {
                       const statusMeta = getBatchStatusMeta(batch.status);
                       return (
-                        <tr key={batch.id} className={batch.status === 'HABIS' ? 'row-muted' : undefined}>
+                        <tr
+                          key={batch.id}
+                          className={batch.status === 'HABIS' ? 'row-muted' : undefined}
+                        >
                           <td className="mono">{batch.batchCode}</td>
                           <td>{formatDateId(batch.receivedOn)}</td>
                           <td><strong>{formatDateId(batch.expiresOn)}</strong></td>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, NetworkError, getItemBatches, getItems, recordUsage } from '../api.js';
 import { formatDateId, getBatchStatusMeta } from '../format.js';
 import { resolveIdempotencyKey } from '../idempotency.js';
+import Icon from '../components/Icon.jsx';
 
 function quantityStepForScale(scale = 0) {
   if (!scale || scale <= 0) return '1';
@@ -159,13 +160,12 @@ export default function UsageScreen({ session, onToast }) {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container page-container--form">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">First Expired, First Out (FR-006)</p>
-          <h1>Pemakaian Stok (FEFO)</h1>
+          <h1>Pemakaian stok (FEFO)</h1>
           <p className="lede">
-            Sistem otomatis memotong batch layak dengan tanggal kedaluwarsa terdekat dan menolak jika stok layak kurang.
+            Sistem memotong batch layak dengan kedaluwarsa terdekat dan menolak jika stok layak kurang.
           </p>
         </div>
       </div>
@@ -178,7 +178,6 @@ export default function UsageScreen({ session, onToast }) {
                 <h2 id="usage-form-title">Catat pemakaian barang</h2>
                 <p>Batch kedaluwarsa otomatis dilewati oleh aturan FEFO.</p>
               </div>
-              <span className="card-step" aria-hidden="true">FE</span>
             </div>
 
             {itemsError && <div className="form-alert" role="alert">{itemsError}</div>}
@@ -314,8 +313,9 @@ export default function UsageScreen({ session, onToast }) {
         >
           {lastResult ? (
             <>
-              <span className="success-mark" aria-hidden="true">✓</span>
-              <p className="eyebrow">Pemakaian FEFO tercatat</p>
+              <span className="success-mark" aria-hidden="true">
+                <Icon name="check" size={18} />
+              </span>
               <p className="balance-caption">Sisa stok layak ({lastResult.itemName})</p>
               <p className="balance-number">
                 {lastResult.usableStock}
@@ -348,8 +348,9 @@ export default function UsageScreen({ session, onToast }) {
             </>
           ) : (
             <>
-              <span className="balance-empty-icon" aria-hidden="true">⇄</span>
-              <p className="eyebrow">Hasil alokasi FEFO</p>
+              <span className="balance-empty-icon" aria-hidden="true">
+                <Icon name="usages" size={20} />
+              </span>
               <p className="balance-caption">Belum ada pemakaian</p>
               <p className="balance-empty-copy">
                 Setelah disimpan, rincian potongan per batch dan saldo terbaru akan muncul di sini.

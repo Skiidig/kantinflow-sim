@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, getItems, getTransactions } from '../api.js';
 import { formatDateId, formatDateTimeId, formatRupiah, getRoleLabel } from '../format.js';
+import Icon from '../components/Icon.jsx';
 
 function getTypeMeta(type) {
   switch (type) {
@@ -87,14 +88,14 @@ export default function TransactionsScreen({ session }) {
     <div className="page-container">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Audit mutasi persediaan (FR-005)</p>
-          <h1>Riwayat Transaksi Stok</h1>
+          <h1>Riwayat transaksi stok</h1>
           <p className="lede">
-            Seluruh catatan penerimaan, pemakaian FEFO, dan pembuangan tersimpan secara kronologis.
+            Penerimaan, pemakaian FEFO, dan pembuangan tercatat berurutan.
           </p>
         </div>
         <div className="heading-actions">
           <button type="button" className="btn-secondary" onClick={loadTransactions} disabled={loading}>
+            <Icon name="refresh" size={15} />
             {loading ? 'Memuat…' : 'Muat ulang'}
           </button>
         </div>
@@ -180,7 +181,7 @@ export default function TransactionsScreen({ session }) {
 
       {error && <div className="form-alert" role="alert">{error}</div>}
 
-      <section className="card panel-card">
+      <section className="card panel-card table-card">
         {loading ? (
           <div className="loading-panel" role="status">
             <span className="spinner spinner--dark" aria-hidden="true" />
@@ -273,7 +274,8 @@ export default function TransactionsScreen({ session }) {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Sebelumnya
+                  <Icon name="chevronLeft" size={14} />
+                  Sebelumnya
                 </button>
                 <button
                   type="button"
@@ -281,7 +283,8 @@ export default function TransactionsScreen({ session }) {
                   disabled={meta.totalPages === 0 || page >= meta.totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Berikutnya →
+                  Berikutnya
+                  <Icon name="chevronRight" size={14} />
                 </button>
               </div>
             </div>

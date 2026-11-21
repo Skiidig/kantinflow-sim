@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, NetworkError, getItems, saveReceipt } from '../api.js';
 import { resolveIdempotencyKey } from '../idempotency.js';
+import Icon from '../components/Icon.jsx';
 
 const formFieldNames = ['itemId', 'batchCode', 'quantity', 'unitCost', 'receivedOn', 'expiresOn'];
 
@@ -200,12 +201,13 @@ export default function ReceiptScreen({ session, onLogout, onToast }) {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container page-container--form">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Penerimaan barang (FR-005)</p>
-          <h1>Stok Masuk</h1>
-          <p className="lede">Pilih barang aktif, catat detail batch datang, dan periksa saldo terbaru dari server.</p>
+          <h1>Stok masuk</h1>
+          <p className="lede">
+            Pilih barang aktif, isi detail batch, lalu cocokkan saldo terbaru dari server.
+          </p>
         </div>
         <div className="heading-actions">
           <button
@@ -214,6 +216,7 @@ export default function ReceiptScreen({ session, onLogout, onToast }) {
             onClick={() => loadActiveItems()}
             disabled={itemsLoading}
           >
+            <Icon name="refresh" size={15} />
             {itemsLoading ? 'Memuat barang…' : 'Muat ulang barang'}
           </button>
         </div>
@@ -226,7 +229,6 @@ export default function ReceiptScreen({ session, onLogout, onToast }) {
               <h2 id="receipt-form-title">Detail penerimaan</h2>
               <p>Isi sesuai surat jalan atau nota dari pemasok.</p>
             </div>
-            <span className="card-step" aria-hidden="true">01</span>
           </div>
 
           {itemsError && <div className="form-alert" role="alert">{itemsError}</div>}
@@ -386,8 +388,9 @@ export default function ReceiptScreen({ session, onLogout, onToast }) {
         >
           {receipt ? (
             <>
-              <span className="success-mark" aria-hidden="true">✓</span>
-              <p className="eyebrow">Penerimaan tersimpan</p>
+              <span className="success-mark" aria-hidden="true">
+                <Icon name="check" size={18} />
+              </span>
               <p className="balance-caption">Saldo fisik terkini ({receipt.itemName})</p>
               <p className="balance-number">
                 {receipt.stockBalance}
@@ -417,8 +420,9 @@ export default function ReceiptScreen({ session, onLogout, onToast }) {
             </>
           ) : (
             <>
-              <span className="balance-empty-icon" aria-hidden="true">◎</span>
-              <p className="eyebrow">Konfirmasi saldo</p>
+              <span className="balance-empty-icon" aria-hidden="true">
+                <Icon name="receipts" size={20} />
+              </span>
               <p className="balance-caption">Belum ada penerimaan</p>
               <p className="balance-empty-copy">
                 Setelah formulir disimpan, saldo fisik terbaru dari server akan muncul di sini.

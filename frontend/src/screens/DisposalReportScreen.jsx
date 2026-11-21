@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, getDisposalReport, getItems } from '../api.js';
 import { formatDateId, formatDateTimeId, formatRupiah } from '../format.js';
+import Icon from '../components/Icon.jsx';
 
 export default function DisposalReportScreen() {
   const [items, setItems] = useState([]);
@@ -65,14 +66,14 @@ export default function DisposalReportScreen() {
     <div className="page-container">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Laporan khusus admin (FR-007)</p>
-          <h1>Laporan Biaya Barang Terbuang</h1>
+          <h1>Laporan biaya barang terbuang</h1>
           <p className="lede">
-            Evaluasi total pemborosan persediaan berdasarkan jumlah terbuang dan harga beli per batch.
+            Evaluasi pemborosan persediaan dari jumlah terbuang dan harga beli per batch.
           </p>
         </div>
         <div className="heading-actions">
           <button type="button" className="btn-secondary" onClick={loadReport} disabled={loading}>
+            <Icon name="refresh" size={15} />
             {loading ? 'Memuat…' : 'Muat ulang'}
           </button>
         </div>
@@ -141,8 +142,13 @@ export default function DisposalReportScreen() {
         <>
           {/* 3 KPI Summary Cards */}
           <section className="kpi-grid kpi-grid--3" aria-label="Ringkasan biaya pembuangan">
-            <article className="kpi-card kpi-card--danger">
-              <p className="kpi-label">Total Biaya Terbuang</p>
+            <article className="kpi-card kpi-card--cost kpi-card--danger">
+              <div className="kpi-head">
+                <p className="kpi-label">Total Biaya Terbuang</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="coins" size={18} />
+                </span>
+              </div>
               <p className="kpi-value kpi-value--money">{formatRupiah(summary?.totalCost ?? '0')}</p>
               <p className="kpi-sub">
                 {summary?.from || summary?.to
@@ -151,14 +157,24 @@ export default function DisposalReportScreen() {
               </p>
             </article>
 
-            <article className="kpi-card">
-              <p className="kpi-label">Total Kejadian Pembuangan</p>
+            <article className="kpi-card kpi-card--events">
+              <div className="kpi-head">
+                <p className="kpi-label">Kejadian Pembuangan</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="activity" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.totalEvents ?? 0}</p>
-              <p className="kpi-sub">Transaksi bertipe DISPOSAL</p>
+              <p className="kpi-sub">Transaksi pembuangan tercatat</p>
             </article>
 
-            <article className="kpi-card">
-              <p className="kpi-label">Total Kuantitas Terbuang</p>
+            <article className="kpi-card kpi-card--quantity">
+              <div className="kpi-head">
+                <p className="kpi-label">Kuantitas Terbuang</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="scale" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.totalQuantity ?? '0'}</p>
               <p className="kpi-sub">Akumulasi seluruh unit barang</p>
             </article>
@@ -166,7 +182,7 @@ export default function DisposalReportScreen() {
 
           {/* Ringkasan per Barang & per Alasan */}
           <div className="report-two-col">
-            <section className="card panel-card">
+            <section className="card panel-card table-card">
               <div className="panel-header">
                 <div>
                   <h2>Ringkasan per Barang</h2>
@@ -208,7 +224,7 @@ export default function DisposalReportScreen() {
               )}
             </section>
 
-            <section className="card panel-card">
+            <section className="card panel-card table-card">
               <div className="panel-header">
                 <div>
                   <h2>Ringkasan per Alasan</h2>
@@ -249,7 +265,7 @@ export default function DisposalReportScreen() {
           </div>
 
           {/* Tabel Rincian Transaksi Pembuangan */}
-          <section className="card panel-card">
+          <section className="card panel-card table-card">
             <div className="panel-header">
               <div>
                 <h2>Rincian Pembuangan ({disposals.length})</h2>

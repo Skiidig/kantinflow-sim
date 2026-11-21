@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, createUser, getUsers, updateUser } from '../api.js';
 import { formatDateTimeId, getRoleLabel } from '../format.js';
+import Icon from '../components/Icon.jsx';
 
 const INITIAL_FORM = {
   name: '',
@@ -133,10 +134,9 @@ export default function UsersScreen({ session, onToast }) {
     <div className="page-container">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Administrasi pengguna (FR-001)</p>
-          <h1>Manajemen Akun Petugas</h1>
+          <h1>Manajemen akun petugas</h1>
           <p className="lede">
-            Buat akun petugas kantin baru dan kelola status akses aktif tanpa mengubah data riwayat.
+            Buat akun petugas kantin dan kelola status aksesnya tanpa mengubah riwayat.
           </p>
         </div>
       </div>
@@ -147,9 +147,8 @@ export default function UsersScreen({ session, onToast }) {
           <div className="card-heading">
             <div>
               <h2 id="create-user-title">Tambah Akun Baru</h2>
-              <p>Password otomatis dienkripsi dengan Bcrypt di server.</p>
+              <p>Password dienkripsi dengan Bcrypt di server.</p>
             </div>
-            <span className="card-step" aria-hidden="true">+</span>
           </div>
 
           {formError && <div className="form-alert" role="alert">{formError}</div>}
@@ -209,14 +208,18 @@ export default function UsersScreen({ session, onToast }) {
             </div>
 
             <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting && <span className="spinner" aria-hidden="true" />}
+              {submitting ? (
+                <span className="spinner" aria-hidden="true" />
+              ) : (
+                <Icon name="plus" size={16} />
+              )}
               {submitting ? 'Membuat akun…' : 'Buat Akun'}
             </button>
           </form>
         </section>
 
         {/* Daftar Akun */}
-        <section className="card panel-card">
+        <section className="card panel-card table-card">
           <div className="panel-header panel-header--wrap">
             <div>
               <h2>Daftar Akun ({users.length})</h2>
@@ -278,7 +281,7 @@ export default function UsersScreen({ session, onToast }) {
                           <span className="sub-cell">{user.email}</span>
                         </td>
                         <td>
-                          <span className={`badge badge--${user.role === 'admin' ? 'forest' : 'info'}`}>
+                          <span className={`badge badge--${user.role === 'admin' ? 'admin' : 'info'}`}>
                             {getRoleLabel(user.role)}
                           </span>
                         </td>
@@ -293,6 +296,11 @@ export default function UsersScreen({ session, onToast }) {
                             type="button"
                             className={`btn-table${user.isActive ? ' btn-table--danger' : ''}`}
                             disabled={isSelf || togglingId === user.id}
+                            aria-label={
+                              isSelf
+                                ? 'Akun Anda tidak dapat dinonaktifkan'
+                                : `${user.isActive ? 'Nonaktifkan' : 'Aktifkan'} ${user.name ?? user.email}`
+                            }
                             title={isSelf ? 'Tidak dapat menonaktifkan akun sendiri' : undefined}
                             onClick={() => handleToggleActive(user)}
                           >

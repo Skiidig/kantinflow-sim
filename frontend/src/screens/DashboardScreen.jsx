@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, getDashboard } from '../api.js';
 import { formatDateId, formatRupiah } from '../format.js';
+import Icon from '../components/Icon.jsx';
 
 export default function DashboardScreen({ session, onNavigate, onOpenItemBatches, onToast }) {
   const isAdmin = session.user.role === 'admin';
@@ -42,10 +43,9 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
     <div className="page-container">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Pemantauan harian</p>
-          <h1>Dashboard Stok &amp; Kedaluwarsa</h1>
+          <h1>Dashboard stok &amp; kedaluwarsa</h1>
           <p className="lede">
-            Pantau barang yang menipis, batch mendekati kedaluwarsa (H-{days}), dan sisa stok kedaluwarsa.
+            Pantau stok menipis, batch yang mendekati kedaluwarsa dalam {days} hari, dan sisa stok yang harus dibuang.
           </p>
         </div>
 
@@ -87,28 +87,46 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
       ) : (
         <>
           <section className="kpi-grid" aria-label="Ringkasan stok">
-            <article className="kpi-card">
-              <p className="kpi-label">Total Barang Aktif</p>
+            <article className="kpi-card kpi-card--items">
+              <div className="kpi-head">
+                <p className="kpi-label">Total Barang Aktif</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="package" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.totalActiveItems ?? 0}</p>
-              <p className="kpi-sub">
-                Per tanggal {formatDateId(summary?.asOfDate)}
-              </p>
+              <p className="kpi-sub">Per {formatDateId(summary?.asOfDate)}</p>
             </article>
 
-            <article className={`kpi-card${(summary?.lowStockCount ?? 0) > 0 ? ' kpi-card--warning' : ''}`}>
-              <p className="kpi-label">Stok Menipis</p>
+            <article className={`kpi-card kpi-card--low${(summary?.lowStockCount ?? 0) > 0 ? ' kpi-card--warning' : ''}`}>
+              <div className="kpi-head">
+                <p className="kpi-label">Stok Menipis</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="alertTriangle" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.lowStockCount ?? 0}</p>
               <p className="kpi-sub">Stok layak ≤ batas minimum</p>
             </article>
 
-            <article className={`kpi-card${(summary?.expiringSoonCount ?? 0) > 0 ? ' kpi-card--warning' : ''}`}>
-              <p className="kpi-label">Mendekati Kedaluwarsa (H-{days})</p>
+            <article className={`kpi-card kpi-card--expiring${(summary?.expiringSoonCount ?? 0) > 0 ? ' kpi-card--warning' : ''}`}>
+              <div className="kpi-head">
+                <p className="kpi-label">Kedaluwarsa H-{days}</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="clock" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.expiringSoonCount ?? 0}</p>
-              <p className="kpi-sub">Prioritaskan pemakaian FEFO</p>
+              <p className="kpi-sub">Batch layak dalam {days} hari ke depan</p>
             </article>
 
-            <article className={`kpi-card${(summary?.expiredRemainingCount ?? 0) > 0 ? ' kpi-card--danger' : ''}`}>
-              <p className="kpi-label">Kedaluwarsa Masih Bersisa</p>
+            <article className={`kpi-card kpi-card--expired${(summary?.expiredRemainingCount ?? 0) > 0 ? ' kpi-card--danger' : ''}`}>
+              <div className="kpi-head">
+                <p className="kpi-label">Kedaluwarsa Masih Bersisa</p>
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name="disposals" size={18} />
+                </span>
+              </div>
               <p className="kpi-value">{summary?.expiredRemainingCount ?? 0}</p>
               <p className="kpi-sub">Perlu segera dicatat pembuangan</p>
             </article>
@@ -116,7 +134,7 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
 
           <div className="dashboard-sections">
             {/* 1. Stok Menipis */}
-            <section className="card panel-card">
+            <section className="card panel-card table-card">
               <div className="panel-header">
                 <div>
                   <h2>Stok Menipis</h2>
@@ -127,7 +145,8 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
                   className="btn-link"
                   onClick={() => onNavigate('/items')}
                 >
-                  Lihat semua barang →
+                  Lihat semua barang
+                  <Icon name="arrowRight" size={14} />
                 </button>
               </div>
 
@@ -179,7 +198,7 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
             </section>
 
             {/* 2. Mendekati Kedaluwarsa H-3 */}
-            <section className="card panel-card">
+            <section className="card panel-card table-card">
               <div className="panel-header">
                 <div>
                   <h2>Batch Mendekati Kedaluwarsa (H-{days})</h2>
@@ -190,7 +209,8 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
                   className="btn-link"
                   onClick={() => onNavigate('/usages')}
                 >
-                  Pemakaian FEFO →
+                  Pemakaian FEFO
+                  <Icon name="arrowRight" size={14} />
                 </button>
               </div>
 
@@ -237,7 +257,7 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
             </section>
 
             {/* 3. Kedaluwarsa Masih Bersisa */}
-            <section className="card panel-card">
+            <section className="card panel-card table-card">
               <div className="panel-header">
                 <div>
                   <h2>Batch Kedaluwarsa Masih Bersisa</h2>
@@ -248,7 +268,8 @@ export default function DashboardScreen({ session, onNavigate, onOpenItemBatches
                   className="btn-link"
                   onClick={() => onNavigate('/disposals')}
                 >
-                  Catat Pembuangan →
+                  Catat Pembuangan
+                  <Icon name="arrowRight" size={14} />
                 </button>
               </div>
 

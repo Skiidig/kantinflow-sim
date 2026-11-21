@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, NetworkError, getItemBatches, getItems, recordDisposal } from '../api.js';
 import { formatDateId, getBatchStatusMeta } from '../format.js';
 import { resolveIdempotencyKey } from '../idempotency.js';
+import Icon from '../components/Icon.jsx';
 
 const REASON_PRESETS = [
   'Kedaluwarsa',
@@ -167,13 +168,12 @@ export default function DisposalScreen({ session, onToast }) {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container page-container--form">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Pengurangan stok kedaluwarsa / rusak (FR-007)</p>
-          <h1>Pembuangan Stok per Batch</h1>
+          <h1>Pembuangan stok per batch</h1>
           <p className="lede">
-            Pilih batch yang masih memiliki sisa stok, catat jumlah dan alasan pembuangan agar saldo fisik tetap akurat.
+            Pilih batch yang masih bersisa, catat jumlah dan alasan pembuangan agar saldo fisik tetap akurat.
           </p>
         </div>
       </div>
@@ -184,9 +184,8 @@ export default function DisposalScreen({ session, onToast }) {
             <div className="card-heading">
               <div>
                 <h2 id="disposal-form-title">Formulir pembuangan</h2>
-                <p>Batch yang sudah kedaluwarsa ditandai merah untuk diprioritaskan.</p>
+                <p>Batch kedaluwarsa ditandai merah untuk diprioritaskan.</p>
               </div>
-              <span className="card-step" aria-hidden="true">07</span>
             </div>
 
             {itemsError && <div className="form-alert" role="alert">{itemsError}</div>}
@@ -361,8 +360,9 @@ export default function DisposalScreen({ session, onToast }) {
         >
           {lastResult ? (
             <>
-              <span className="success-mark" aria-hidden="true">✓</span>
-              <p className="eyebrow">Pembuangan tersimpan</p>
+              <span className="success-mark" aria-hidden="true">
+                <Icon name="check" size={18} />
+              </span>
               <p className="balance-caption">Sisa batch {lastResult.batchCode}</p>
               <p className="balance-number">
                 {lastResult.batchRemainingQuantity}
@@ -396,8 +396,9 @@ export default function DisposalScreen({ session, onToast }) {
             </>
           ) : (
             <>
-              <span className="balance-empty-icon" aria-hidden="true">✕</span>
-              <p className="eyebrow">Konfirmasi pembuangan</p>
+              <span className="balance-empty-icon" aria-hidden="true">
+                <Icon name="disposals" size={20} />
+              </span>
               <p className="balance-caption">Belum ada pencatatan</p>
               <p className="balance-empty-copy">
                 Setelah pembuangan disimpan, sisa batch dan saldo barang terbaru akan muncul di sini.
