@@ -2028,3 +2028,259 @@ code {
     font-weight: 700;
   }
 }
+
+
+/* ==========================================================================
+   FEFO Preview, Disposal Picker, Transactions & Reports (Issues #18-#19)
+   ========================================================================== */
+
+.fefo-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.fefo-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fefo-preview-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--cream);
+}
+
+.fefo-rank {
+  display: inline-flex;
+  min-width: 1.85rem;
+  height: 1.85rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: var(--forest);
+  color: var(--gold-soft);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.fefo-preview-meta,
+.batch-picker-meta {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.fefo-preview-meta span,
+.batch-picker-meta span {
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+}
+
+.fefo-qty {
+  margin-left: auto;
+  color: var(--forest);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.allocation-heading {
+  margin: 1rem 0 0.45rem;
+  color: rgba(247, 243, 233, 0.72);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.allocation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.allocation-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.allocation-list li > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.allocation-list li span {
+  color: rgba(247, 243, 233, 0.65);
+  font-size: 0.72rem;
+}
+
+.allocation-delta {
+  color: var(--gold-soft);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+/* ---------- Batch Picker & Reason Chips ---------- */
+
+.batch-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.batch-picker-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.85rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 0.8rem;
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.batch-picker-item:hover {
+  border-color: var(--forest);
+}
+
+.batch-picker-item--selected {
+  border-color: var(--forest);
+  background: var(--success-bg);
+}
+
+.batch-picker-item--expired {
+  border-color: rgba(165, 39, 28, 0.45);
+  background: var(--danger-bg);
+}
+
+.batch-picker-item--expired.batch-picker-item--selected {
+  border-color: var(--danger);
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.reason-chip {
+  padding: 0.3rem 0.68rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.reason-chip:hover {
+  border-color: var(--forest);
+}
+
+.reason-chip--active {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.loading-panel--compact {
+  padding: 1rem 0.5rem;
+}
+
+/* ---------- Transactions & Reports ---------- */
+
+.toolbar-grid--5 {
+  grid-template-columns: 1.5fr 1.2fr 1fr 1fr auto;
+}
+
+.tx-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tx-lines li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.tx-exp {
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.kpi-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kpi-value--money {
+  font-size: clamp(1.45rem, 2.5vw, 1.95rem);
+}
+
+.report-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+@media (max-width: 1023px) {
+  .toolbar-grid--5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .report-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .toolbar-grid--5,
+  .kpi-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}

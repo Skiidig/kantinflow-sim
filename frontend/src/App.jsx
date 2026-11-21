@@ -3,9 +3,13 @@ import { setAuthToken, setUnauthorizedHandler } from './api.js';
 import AppShell from './components/AppShell.jsx';
 import ToastContainer from './components/ToastContainer.jsx';
 import DashboardScreen from './screens/DashboardScreen.jsx';
+import DisposalReportScreen from './screens/DisposalReportScreen.jsx';
+import DisposalScreen from './screens/DisposalScreen.jsx';
 import ItemsScreen from './screens/ItemsScreen.jsx';
 import LoginScreen from './screens/LoginScreen.jsx';
 import ReceiptScreen from './screens/ReceiptScreen.jsx';
+import TransactionsScreen from './screens/TransactionsScreen.jsx';
+import UsageScreen from './screens/UsageScreen.jsx';
 import UsersScreen from './screens/UsersScreen.jsx';
 
 const SESSION_KEY = 'kantinflow.session';
@@ -35,29 +39,6 @@ function readSession() {
     // Session yang rusak diperlakukan seperti belum masuk.
   }
   return null;
-}
-
-function ComingSoonScreen({ eyebrow, title, description, onBack }) {
-  return (
-    <div className="page-container">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
-          <p className="lede">{description}</p>
-        </div>
-      </div>
-      <section className="card panel-card">
-        <div className="empty-state">
-          <strong>Endpoint API sudah aktif — antarmuka sedang disiapkan pada tahap berikutnya.</strong>
-          <p>Layar ini dijadwalkan pada Issue #18 / #19 setelah modul dasar selesai.</p>
-          <button type="button" className="btn-secondary" onClick={onBack}>
-            Kembali ke Dashboard
-          </button>
-        </div>
-      </section>
-    </div>
-  );
 }
 
 function ForbiddenScreen({ onBack }) {
@@ -203,48 +184,20 @@ export default function App() {
       case '/receipts':
         screen = <ReceiptScreen session={session} onLogout={handleLogout} onToast={pushToast} />;
         break;
+      case '/usages':
+        screen = <UsageScreen session={session} onToast={pushToast} />;
+        break;
+      case '/disposals':
+        screen = <DisposalScreen session={session} onToast={pushToast} />;
+        break;
+      case '/transactions':
+        screen = <TransactionsScreen session={session} />;
+        break;
       case '/users':
         screen = <UsersScreen session={session} onToast={pushToast} />;
         break;
-      case '/usages':
-        screen = (
-          <ComingSoonScreen
-            eyebrow="FR-006 · Pemakaian FEFO"
-            title="Pemakaian Stok (FEFO)"
-            description="Pemotongan otomatis dari batch layak dengan tanggal kedaluwarsa terdekat."
-            onBack={() => navigate('/dashboard')}
-          />
-        );
-        break;
-      case '/disposals':
-        screen = (
-          <ComingSoonScreen
-            eyebrow="FR-007 · Pembuangan Stok"
-            title="Pembuangan Stok per Batch"
-            description="Pencatatan jumlah dan alasan pembuangan barang kedaluwarsa atau rusak."
-            onBack={() => navigate('/dashboard')}
-          />
-        );
-        break;
-      case '/transactions':
-        screen = (
-          <ComingSoonScreen
-            eyebrow="FR-005 · Audit & Riwayat"
-            title="Riwayat Transaksi Stok"
-            description="Catatan kronologis seluruh penerimaan, pemakaian FEFO, dan pembuangan."
-            onBack={() => navigate('/dashboard')}
-          />
-        );
-        break;
       case '/reports/disposals':
-        screen = (
-          <ComingSoonScreen
-            eyebrow="FR-007 · Laporan Admin"
-            title="Laporan Biaya Barang Terbuang"
-            description="Ringkasan total kuantitas dan biaya barang terbuang berdasarkan harga beli batch."
-            onBack={() => navigate('/dashboard')}
-          />
-        );
+        screen = <DisposalReportScreen />;
         break;
       default:
         screen = (
