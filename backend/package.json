@@ -7,6 +7,7 @@
     "db:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-mongodb.ps1",
     "seed": "node --env-file-if-exists=.env scripts/seed-demo.mjs",
     "seed:reset": "node --env-file-if-exists=.env scripts/seed-demo.mjs --reset",
+    "benchmark": "node --env-file-if-exists=.env scripts/benchmark.mjs",
     "test": "node --env-file-if-exists=.env --test"
   },
   "dependencies": {
