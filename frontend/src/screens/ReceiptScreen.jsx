@@ -34,7 +34,7 @@ function shortId(value) {
   return value ? `${value.slice(0, 8)}…` : '—';
 }
 
-export default function ReceiptScreen({ session, onLogout }) {
+export default function ReceiptScreen({ session, onLogout, onToast }) {
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState('');
@@ -46,16 +46,6 @@ export default function ReceiptScreen({ session, onLogout }) {
   const quantityRef = useRef(null);
 
   const itemConfigured = /^[a-f0-9]{24}$/iu.test(demoItem.id);
-  const initials = (session.user.name ?? 'Petugas')
-    .split(/\s+/u)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase() || 'P';
-  const roleLabel = session.user.role === 'staff'
-    ? 'Petugas'
-    : session.user.role === 'admin' ? 'Admin' : session.user.role;
 
   function updateField(name, value) {
     setForm((previous) => ({ ...previous, [name]: value }));
@@ -115,6 +105,11 @@ export default function ReceiptScreen({ session, onLogout }) {
         quantity: payload.quantity,
         fingerprint,
       });
+      onToast?.({
+        type: 'success',
+        title: 'Penerimaan tersimpan',
+        message: `Batch ${payload.batchCode} (+${payload.quantity} ${data.unit}) tercatat. Saldo kini ${data.stockBalance} ${data.unit}.`,
+      });
     } catch (error) {
       if (error instanceof NetworkError) {
         setFormError(
@@ -162,42 +157,17 @@ export default function ReceiptScreen({ session, onLogout }) {
   }
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">KF</span>
-          <span className="brand-name">KantinFlow <em>SIM</em></span>
+    <div className="page-container">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Penerimaan barang (FR-005)</p>
+          <h1>Stok Masuk</h1>
+          <p className="lede">Catat barang yang datang, lalu periksa saldo terbaru dari server.</p>
         </div>
+        <div className="stage-chip">Integrasi daftar barang dinamis di Issue #18</div>
+      </div>
 
-        <div className="header-actions">
-          <div className="user-chip">
-            <span className="user-avatar" aria-hidden="true">{initials}</span>
-            <div className="user-meta">
-              <strong>{session.user.name ?? 'Petugas'}</strong>
-              <span>{roleLabel}</span>
-            </div>
-          </div>
-          <button
-            className="btn-ghost"
-            type="button"
-            onClick={() => onLogout('Anda sudah keluar.')}
-          >
-            Keluar
-          </button>
-        </div>
-      </header>
-
-      <main className="receipt-main">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">Penerimaan barang</p>
-            <h1>Stok Masuk</h1>
-            <p className="lede">Catat barang yang datang, lalu periksa saldo terbaru dari server.</p>
-          </div>
-          <div className="stage-chip">Tahap 1 · Satu barang demo</div>
-        </div>
-
-        <div className="receipt-grid">
+      <div className="receipt-grid">
           <section className="card form-card" aria-labelledby="receipt-form-title">
             <div className="card-heading">
               <div>
@@ -393,12 +363,7 @@ export default function ReceiptScreen({ session, onLogout }) {
               </>
             )}
           </aside>
-        </div>
-      </main>
-
-      <footer className="app-footer">
-        KantinFlow SIM · Login &amp; Stok Masuk
-      </footer>
+      </div>
     </div>
   );
 }

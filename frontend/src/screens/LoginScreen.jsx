@@ -84,14 +84,14 @@ export default function LoginScreen({ onLogin, notice }) {
           </div>
         </div>
 
-        <p className="brand-foot">Tahap 1 · Login &amp; Stok Masuk</p>
+        <p className="brand-foot">KantinFlow SIM · Stok &amp; Pemantauan Kedaluwarsa</p>
       </section>
 
       <section className="login-panel">
         <div className="login-form-wrap">
           <p className="eyebrow">Selamat datang kembali</p>
           <h2>Masuk ke KantinFlow</h2>
-          <p className="lede">Gunakan akun petugas untuk mencatat penerimaan stok.</p>
+          <p className="lede">Gunakan akun admin atau petugas untuk mengelola stok kantin.</p>
 
           {notice && (
             <div className="notice notice--info" role="status">
