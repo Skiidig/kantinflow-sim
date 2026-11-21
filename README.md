@@ -130,6 +130,6 @@ npm.cmd run build
 - **Dokumen SRS & SDS Final:** [`docs/KantinFlow_SRS_SDS_Web.docx`](docs/KantinFlow_SRS_SDS_Web.docx)
 - **Panduan Demo End-to-End (Hari Senin):** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
 - **Koleksi Postman v2.1 (19 Request):** [`docs/kantinflow.postman_collection.json`](docs/kantinflow.postman_collection.json)
-- **Published Postman Documentation:** `[Tempel URL Published Postman Documentation di sini]`
+- **Published Postman Documentation:** [KantinFlow SIM API Docs (Postman)](https://documenter.getpostman.com/view/60251527/2sBYPv2XzP)
 - **GitHub Projects Board:** [KantinFlow SIM — Project #1](https://github.com/users/Skiidig/projects/1)
 - **Panduan Teknis Tambahan:** [`backend/README.md`](backend/README.md) · [`frontend/README.md`](frontend/README.md)
