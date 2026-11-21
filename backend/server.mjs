@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { createApp } from './app.mjs';
-import { prepareReceiptStore } from './receipt-store.mjs';
+import { prepareDatabase } from './db-indexes.mjs';
 
 const {
   MONGODB_URI, MONGODB_DB, JWT_SECRET, JWT_EXPIRES_IN = '8h', PORT = '3000',
@@ -13,7 +13,7 @@ const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
 try {
   await client.connect();
   const db = client.db(MONGODB_DB);
-  await prepareReceiptStore(db);
+  await prepareDatabase(db);
   const server = createApp({ client, db, jwtSecret: JWT_SECRET, tokenTtl: JWT_EXPIRES_IN }).listen(
     Number(PORT), '127.0.0.1', () => console.log('KantinFlow SIM mendengarkan di port ' + PORT),
   );
