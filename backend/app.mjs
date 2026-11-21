@@ -1,5 +1,6 @@
 import express from 'express';
 import { authorize, createAuthenticate } from './middleware/auth.mjs';
+import { createCorsMiddleware } from './middleware/cors.mjs';
 import { errorHandler } from './middleware/error-handler.mjs';
 import { createAuthRouter } from './routes/auth.routes.mjs';
 import { createDashboardRouter } from './routes/dashboard.routes.mjs';
@@ -9,9 +10,20 @@ import { createStockRouter } from './routes/stock.routes.mjs';
 import { createTransactionsRouter } from './routes/transactions.routes.mjs';
 import { createUsersRouter } from './routes/users.routes.mjs';
 
-export function createApp({ client, db, jwtSecret, tokenTtl = '8h' }) {
+export function createApp({
+  client,
+  db,
+  jwtSecret,
+  tokenTtl = '8h',
+  corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+}) {
   const app = express();
+  app.use(createCorsMiddleware(corsOrigin));
   app.use(express.json({ limit: '16kb' }));
+
+  app.get('/api/v1/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
 
   const authenticate = createAuthenticate({ db, jwtSecret });
 

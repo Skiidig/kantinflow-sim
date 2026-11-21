@@ -21,9 +21,9 @@ const petugasPassword = DEMO_PETUGAS_PASSWORD || DEMO_STAFF_PASSWORD;
 const petugasName = DEMO_PETUGAS_NAME || DEMO_STAFF_NAME;
 const adminPassword = DEMO_ADMIN_PASSWORD || petugasPassword;
 
-if (!MONGODB_URI || !MONGODB_DB || !petugasEmailRaw || !petugasPassword) {
+if (!MONGODB_URI || !petugasEmailRaw || !petugasPassword) {
   throw new Error(
-    'Isi MONGODB_URI, MONGODB_DB, DEMO_PETUGAS_EMAIL (atau DEMO_STAFF_EMAIL), dan DEMO_PETUGAS_PASSWORD (atau DEMO_STAFF_PASSWORD) di .env.',
+    'Isi MONGODB_URI, DEMO_PETUGAS_EMAIL (atau DEMO_STAFF_EMAIL), dan DEMO_PETUGAS_PASSWORD (atau DEMO_STAFF_PASSWORD) di .env.',
   );
 }
 
@@ -31,11 +31,11 @@ const resetStock = process.argv.includes('--reset');
 const adminEmail = DEMO_ADMIN_EMAIL.trim().toLowerCase();
 const petugasEmail = petugasEmailRaw.trim().toLowerCase();
 const now = new Date();
-const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
 
 try {
   await client.connect();
-  const db = client.db(MONGODB_DB);
+  const db = MONGODB_DB ? client.db(MONGODB_DB) : client.db();
   const hello = await db.admin().command({ hello: 1 });
   if (!hello.setName) {
     throw new Error(
