@@ -1,18 +1,35 @@
-import { MongoClient } from 'mongodb';
+import { Decimal128, MongoClient } from 'mongodb';
+import { ROLES } from '../middleware/auth.mjs';
 import { hashPassword } from '../password.mjs';
 
 const {
-  MONGODB_URI, MONGODB_DB, DEMO_STAFF_EMAIL, DEMO_STAFF_PASSWORD, DEMO_STAFF_NAME = 'Petugas Demo',
+  MONGODB_URI,
+  MONGODB_DB,
+  DEMO_ADMIN_EMAIL = 'admin@kantinflow.local',
+  DEMO_ADMIN_PASSWORD,
+  DEMO_ADMIN_NAME = 'Admin Kantin',
+  DEMO_PETUGAS_EMAIL,
+  DEMO_PETUGAS_PASSWORD,
+  DEMO_PETUGAS_NAME,
+  DEMO_STAFF_EMAIL,
+  DEMO_STAFF_PASSWORD,
+  DEMO_STAFF_NAME = 'Petugas Demo',
 } = process.env;
 
-if (!MONGODB_URI || !MONGODB_DB || !DEMO_STAFF_EMAIL || !DEMO_STAFF_PASSWORD) {
+const petugasEmailRaw = DEMO_PETUGAS_EMAIL || DEMO_STAFF_EMAIL;
+const petugasPassword = DEMO_PETUGAS_PASSWORD || DEMO_STAFF_PASSWORD;
+const petugasName = DEMO_PETUGAS_NAME || DEMO_STAFF_NAME;
+const adminPassword = DEMO_ADMIN_PASSWORD || petugasPassword;
+
+if (!MONGODB_URI || !MONGODB_DB || !petugasEmailRaw || !petugasPassword) {
   throw new Error(
-    'Isi MONGODB_URI, MONGODB_DB, DEMO_STAFF_EMAIL, dan DEMO_STAFF_PASSWORD di .env.',
+    'Isi MONGODB_URI, MONGODB_DB, DEMO_PETUGAS_EMAIL (atau DEMO_STAFF_EMAIL), dan DEMO_PETUGAS_PASSWORD (atau DEMO_STAFF_PASSWORD) di .env.',
   );
 }
 
 const resetStock = process.argv.includes('--reset');
-const email = DEMO_STAFF_EMAIL.trim().toLowerCase();
+const adminEmail = DEMO_ADMIN_EMAIL.trim().toLowerCase();
+const petugasEmail = petugasEmailRaw.trim().toLowerCase();
 const now = new Date();
 const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
 
@@ -32,17 +49,50 @@ try {
     { email: 1 },
     { unique: true, partialFilterExpression: { email: { $type: 'string' } } },
   );
+
+  // Bersihkan indeks lama `sku_1` bila berasal dari tahap 1 sebelum migrasi ke `code`.
+  try {
+    await items.dropIndex('sku_1');
+  } catch (err) {
+    if (err.codeName !== 'IndexNotFound' && err.codeName !== 'NamespaceNotFound') throw err;
+  }
+
   await items.createIndex(
-    { sku: 1 },
-    { unique: true, partialFilterExpression: { sku: { $type: 'string' } } },
+    { code: 1 },
+    { unique: true, partialFilterExpression: { code: { $type: 'string' } } },
   );
 
-  const passwordHash = await hashPassword(DEMO_STAFF_PASSWORD);
+  const [adminPasswordHash, petugasPasswordHash] = await Promise.all([
+    hashPassword(adminPassword),
+    hashPassword(petugasPassword),
+  ]);
+
   await users.updateOne(
-    { email },
+    { email: adminEmail },
     {
       $set: {
-        name: DEMO_STAFF_NAME, email, role: 'staff', isActive: true, passwordHash, updatedAt: now,
+        name: DEMO_ADMIN_NAME,
+        email: adminEmail,
+        role: ROLES.ADMIN,
+        isActive: true,
+        passwordHash: adminPasswordHash,
+        updatedAt: now,
+      },
+      $setOnInsert: { createdAt: now },
+    },
+    { upsert: true },
+  );
+
+  await users.updateOne(
+    { email: petugasEmail },
+    {
+      $set: {
+        name: petugasName,
+        email: petugasEmail,
+        role: ROLES.PETUGAS,
+        isActive: true,
+        passwordHash: petugasPasswordHash,
+        updatedAt: now,
       },
       $setOnInsert: { createdAt: now },
     },
@@ -50,12 +100,19 @@ try {
   );
 
   const item = await items.findOneAndUpdate(
-    { sku: 'SUSU-KOTAK' },
+    { $or: [{ code: 'SUSU-KOTAK' }, { sku: 'SUSU-KOTAK' }] },
     {
       $set: {
-        name: 'Susu Kotak', baseUnit: 'kotak', quantityScale: 0, isActive: true, updatedAt: now,
+        code: 'SUSU-KOTAK',
+        name: 'Susu Kotak',
+        baseUnit: 'kotak',
+        minimumStock: Decimal128.fromString('5'),
+        quantityScale: 0,
+        isActive: true,
+        updatedAt: now,
       },
-      $setOnInsert: { sku: 'SUSU-KOTAK', stockRevision: 0, createdAt: now },
+      $unset: { sku: '' },
+      $setOnInsert: { stockRevision: 0, createdAt: now },
     },
     { upsert: true, returnDocument: 'after' },
   );
@@ -73,9 +130,15 @@ try {
   const stockBalance = balance ? balance.total.toString() : '0';
 
   console.log(`Database      : ${MONGODB_DB} (replica set ${hello.setName})`);
-  console.log(`Akun petugas  : ${email}`);
-  console.log('Password      : nilai DEMO_STAFF_PASSWORD di .env');
-  console.log('Barang        : Susu Kotak (sku SUSU-KOTAK)');
+  console.log(`Akun admin    : ${adminEmail} (role: ${ROLES.ADMIN})`);
+  console.log(
+    `Password admin: ${DEMO_ADMIN_PASSWORD ? 'nilai DEMO_ADMIN_PASSWORD di .env' : 'mengikuti DEMO_PETUGAS_PASSWORD / DEMO_STAFF_PASSWORD'}`,
+  );
+  console.log(`Akun petugas  : ${petugasEmail} (role: ${ROLES.PETUGAS})`);
+  console.log('Password ptgs : nilai DEMO_PETUGAS_PASSWORD / DEMO_STAFF_PASSWORD di .env');
+  console.log(
+    `Barang        : ${item.name} (code ${item.code}, minimumStock ${item.minimumStock.toString()} ${item.baseUnit})`,
+  );
   console.log(`itemId        : ${item._id.toHexString()}`);
   console.log(`Saldo awal    : ${stockBalance} ${item.baseUnit}`);
   console.log('\nSalin itemId ke variabel koleksi Postman "itemId".');

@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { test } from 'node:test';
 import jwt from 'jsonwebtoken';
-import { MongoClient, ObjectId } from 'mongodb';
+import { Decimal128, MongoClient, ObjectId } from 'mongodb';
 import { createApp } from './app.mjs';
+import { ROLES } from './middleware/auth.mjs';
 import { hashPassword } from './password.mjs';
 import { prepareReceiptStore } from './receipt-store.mjs';
 
@@ -28,21 +29,46 @@ test('login issues a token that records a stock receipt', { skip: !uri }, async 
   const password = randomBytes(18).toString('base64url');
   const passwordHash = await hashPassword(password);
   const itemId = new ObjectId();
-  const staffId = new ObjectId();
+  const petugasId = new ObjectId();
+  const adminId = new ObjectId();
   const inactiveId = new ObjectId();
   const email = 'petugas@kantinflow.test';
+  const adminEmail = 'admin@kantinflow.test';
 
   await prepareReceiptStore(db);
   await db.collection('items').insertOne({
-    _id: itemId, name: 'Susu Kotak', baseUnit: 'kotak', quantityScale: 0,
+    _id: itemId,
+    code: 'SUSU-KOTAK',
+    name: 'Susu Kotak',
+    baseUnit: 'kotak',
+    minimumStock: Decimal128.fromString('5'),
+    quantityScale: 0,
+    isActive: true,
   });
   await db.collection('users').insertMany([
     {
-      _id: staffId, name: 'Petugas Demo', email, role: 'staff', isActive: true, passwordHash,
+      _id: petugasId,
+      name: 'Petugas Demo',
+      email,
+      role: ROLES.PETUGAS,
+      isActive: true,
+      passwordHash,
     },
     {
-      _id: inactiveId, name: 'Petugas Nonaktif', email: 'nonaktif@kantinflow.test',
-      role: 'staff', isActive: false, passwordHash,
+      _id: adminId,
+      name: 'Admin Kantin',
+      email: adminEmail,
+      role: ROLES.ADMIN,
+      isActive: true,
+      passwordHash,
+    },
+    {
+      _id: inactiveId,
+      name: 'Petugas Nonaktif',
+      email: 'nonaktif@kantinflow.test',
+      role: ROLES.PETUGAS,
+      isActive: false,
+      passwordHash,
     },
   ]);
 
@@ -77,13 +103,20 @@ test('login issues a token that records a stock receipt', { skip: !uri }, async 
   assert.equal(success.status, 200);
   assert.equal(typeof success.body.data.token, 'string');
   assert.deepEqual(success.body.data.user, {
-    id: staffId.toHexString(), name: 'Petugas Demo', email, role: 'staff',
+    id: petugasId.toHexString(), name: 'Petugas Demo', email, role: ROLES.PETUGAS,
   });
   assert.equal(JSON.stringify(success.body).includes(passwordHash), false);
   assert.equal('passwordHash' in success.body.data.user, false);
 
+  const adminLogin = await login({ email: adminEmail, password });
+  assert.equal(adminLogin.status, 200);
+  assert.deepEqual(adminLogin.body.data.user, {
+    id: adminId.toHexString(), name: 'Admin Kantin', email: adminEmail, role: ROLES.ADMIN,
+  });
+
   const claims = jwt.verify(success.body.data.token, secret, { algorithms: ['HS256'] });
-  assert.equal(claims.sub, staffId.toHexString());
+  assert.equal(claims.sub, petugasId.toHexString());
+  assert.equal(claims.role, ROLES.PETUGAS);
   assert.ok(claims.exp > claims.iat);
 
   const wrongEmail = await login({ email: 'tidak-ada@kantinflow.test', password });
