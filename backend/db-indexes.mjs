@@ -16,4 +16,6 @@ export async function prepareDatabase(db) {
   await db.collection('batches').createIndex({ itemId: 1, expiresOn: 1, receivedOn: 1 });
   await db.collection('batches').createIndex({ expiresOn: 1, remainingQuantity: 1 });
   await db.collection('stockTransactions').createIndex({ itemId: 1, recordedAt: -1 });
+  await db.collection('stockTransactions').createIndex({ type: 1, recordedAt: -1 });
+  await db.collection('stockTransactions').createIndex({ recordedAt: -1 });
 }
