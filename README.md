@@ -59,39 +59,28 @@ Copy-Item frontend\.env.example frontend\.env
 ```
 Lengkapi `JWT_SECRET` (minimal 32 byte) dan password demo pada `backend/.env`.
 
-### 2. Jalankan MongoDB Replica Set & Seed Data Demo
+### 2. Pasang Dependensi & Seed Data Demo (Sekali Saja / Saat Reset)
 ```powershell
-cd backend
-npm.cmd install
+npm.cmd --prefix backend install
+npm.cmd --prefix frontend install
 npm.cmd run db:start
-npm.cmd run seed:reset
+npm.cmd run seed
 ```
 
 Akun demo yang dibuat otomatis (password sesuai nilai di `backend/.env`):
 - **Admin:** `admin@kantinflow.local`
 - **Petugas:** `petugas@kantinflow.local`
 
-### 3. Jalankan Backend API
-Masih di folder `backend/`:
+### 3. Jalankan Seluruh Aplikasi dalam 1 Perintah (Rekomendasi)
+Dari folder root `kantinflow-sim`:
 ```powershell
 npm.cmd start
 ```
-Server API berjalan sesuai `PORT` pada `backend/.env` (default `http://127.0.0.1:3000`).
+Perintah ini otomatis menyalakan **MongoDB Replica Set (`rs0`)**, **Backend Express (`[BACKEND]`)**, dan **Frontend Vite (`[FRONTEND]`)** dalam satu terminal. Buka **`http://localhost:5173`** di browser.
 
-### 4. Jalankan Frontend React
-Buka terminal terpisah di folder `frontend/`:
-```powershell
-cd frontend
-npm.cmd install
-npm.cmd run dev
-```
-Akses aplikasi di **`http://localhost:5173`**.
+Saat selesai, cukup tekan **`Ctrl+C`** — Frontend, Backend, dan MongoDB akan berhenti otomatis secara bersih.
 
-### 5. Menghentikan MongoDB Lokal Setelah Selesai
-```powershell
-cd backend
-npm.cmd run db:stop
-```
+*(Alternatif manual terpisah: jalankan `npm.cmd --prefix backend run db:start`, `npm.cmd --prefix backend start`, `npm.cmd --prefix frontend run dev`, lalu `npm.cmd run db:stop` setelah selesai.)*
 
 ---
 

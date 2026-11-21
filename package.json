@@ -1,0 +1,17 @@
+{
+  "name": "kantinflow-sim",
+  "private": true,
+  "version": "1.0.0",
+  "description": "KantinFlow — Sistem Informasi Pengelolaan Stok dan Pemantauan Kedaluwarsa Kantin",
+  "scripts": {
+    "start": "node scripts/dev.mjs",
+    "dev": "node scripts/dev.mjs",
+    "seed": "npm --prefix backend run seed:reset",
+    "db:start": "npm --prefix backend run db:start",
+    "db:stop": "npm --prefix backend run db:stop",
+    "benchmark": "npm --prefix backend run benchmark",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test",
+    "build:frontend": "npm --prefix frontend run build"
+  }
+}
