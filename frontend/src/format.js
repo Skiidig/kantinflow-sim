@@ -43,6 +43,13 @@ export function addDaysToCalendarDate(dateStr, days) {
   return date.toISOString().slice(0, 10);
 }
 
+export function validateDateRange(from, to) {
+  if (from && to && from > to) {
+    return 'Tanggal akhir tidak boleh mendahului tanggal awal.';
+  }
+  return '';
+}
+
 export function formatRupiah(value) {
   if (value === null || value === undefined || value === '') return 'Rp 0';
   const raw = String(value).trim();

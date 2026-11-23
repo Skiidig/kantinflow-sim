@@ -10,6 +10,7 @@ import {
   getBatchStatusMeta,
   getOperationalDateString,
   getRoleLabel,
+  validateDateRange,
 } from './format.js';
 
 test('formatRupiah formats integer and decimal strings cleanly', () => {
@@ -70,6 +71,18 @@ test('frontend operational date and timestamp display are identical under differ
     }).trim();
     assert.deepEqual(JSON.parse(out), expected, `Mismatch when TZ=${tz}`);
   }
+});
+
+test('validateDateRange allows valid or single-ended ranges and rejects from > to', () => {
+  assert.equal(validateDateRange('', ''), '');
+  assert.equal(validateDateRange('2026-11-23', ''), '');
+  assert.equal(validateDateRange('', '2026-11-23'), '');
+  assert.equal(validateDateRange('2026-11-23', '2026-11-23'), '');
+  assert.equal(validateDateRange('2026-11-20', '2026-11-23'), '');
+  assert.equal(
+    validateDateRange('2026-12-01', '2026-11-23'),
+    'Tanggal akhir tidak boleh mendahului tanggal awal.',
+  );
 });
 
 test('role and batch status helpers map labels accurately', () => {

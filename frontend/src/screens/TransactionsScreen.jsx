@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, getItems, getTransactions } from '../api.js';
-import { formatDateId, formatDateTimeId, formatRupiah, getRoleLabel } from '../format.js';
+import {
+  formatDateId,
+  formatDateTimeId,
+  formatRupiah,
+  getRoleLabel,
+  validateDateRange,
+} from '../format.js';
 import Icon from '../components/Icon.jsx';
 
 function getTypeMeta(type) {
@@ -42,7 +48,14 @@ export default function TransactionsScreen({ session }) {
     return () => { active = false; };
   }, []);
 
+  const dateRangeError = validateDateRange(from, to);
+
   const loadTransactions = useCallback(async () => {
+    if (dateRangeError) {
+      setError(dateRangeError);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -70,7 +83,7 @@ export default function TransactionsScreen({ session }) {
     } finally {
       setLoading(false);
     }
-  }, [itemId, type, from, to, page, limit]);
+  }, [itemId, type, from, to, page, limit, dateRangeError]);
 
   useEffect(() => {
     loadTransactions();
@@ -146,6 +159,7 @@ export default function TransactionsScreen({ session }) {
               id="tx-from"
               type="date"
               value={from}
+              aria-invalid={Boolean(dateRangeError)}
               onChange={(event) => {
                 setFrom(event.target.value);
                 setPage(1);
@@ -159,6 +173,7 @@ export default function TransactionsScreen({ session }) {
               id="tx-to"
               type="date"
               value={to}
+              aria-invalid={Boolean(dateRangeError)}
               onChange={(event) => {
                 setTo(event.target.value);
                 setPage(1);

@@ -100,6 +100,10 @@ export default function App() {
     setAuthToken(null);
     setLoginNotice(message);
     setSession(null);
+    if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+    }
+    setCurrentPath('/dashboard');
   }, []);
 
   useEffect(() => {

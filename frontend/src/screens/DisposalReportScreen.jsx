@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, NetworkError, getDisposalReport, getItems } from '../api.js';
-import { formatDateId, formatDateTimeId, formatRupiah } from '../format.js';
+import { formatDateId, formatDateTimeId, formatRupiah, validateDateRange } from '../format.js';
 import Icon from '../components/Icon.jsx';
 
 export default function DisposalReportScreen() {
@@ -23,7 +23,14 @@ export default function DisposalReportScreen() {
     return () => { active = false; };
   }, []);
 
+  const dateRangeError = validateDateRange(from, to);
+
   const loadReport = useCallback(async () => {
+    if (dateRangeError) {
+      setError(dateRangeError);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -45,7 +52,7 @@ export default function DisposalReportScreen() {
     } finally {
       setLoading(false);
     }
-  }, [from, to, itemId]);
+  }, [from, to, itemId, dateRangeError]);
 
   useEffect(() => {
     loadReport();
@@ -104,6 +111,7 @@ export default function DisposalReportScreen() {
               id="rep-from"
               type="date"
               value={from}
+              aria-invalid={Boolean(dateRangeError)}
               onChange={(event) => setFrom(event.target.value)}
             />
           </div>
@@ -114,6 +122,7 @@ export default function DisposalReportScreen() {
               id="rep-to"
               type="date"
               value={to}
+              aria-invalid={Boolean(dateRangeError)}
               onChange={(event) => setTo(event.target.value)}
             />
           </div>

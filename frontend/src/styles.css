@@ -2360,7 +2360,7 @@ code {
    Responsive
    ========================================================================== */
 
-@media (max-width: 1439px) {
+@media (max-width: 1599px) {
   .dashboard-sections > .panel-card:nth-child(1),
   .dashboard-sections > .panel-card:nth-child(2),
   .dashboard-sections > .panel-card:nth-child(3) {
@@ -2448,7 +2448,7 @@ code {
   }
 
   .shell-content {
-    padding: 22px 20px 84px;
+    padding: 22px 20px calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
   .split-grid {
@@ -2460,7 +2460,7 @@ code {
   }
 
   .app-footer {
-    padding-bottom: 84px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-bottom-nav {
@@ -2517,11 +2517,11 @@ code {
   }
 
   .shell-content {
-    padding-bottom: 100px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
   .app-footer {
-    padding-bottom: 100px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
   .toast-stack {
@@ -2594,7 +2594,7 @@ code {
 
 @media (max-width: 640px) {
   .shell-content {
-    padding: 16px 14px 84px;
+    padding: 16px 14px calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
   .shell-topbar {
@@ -2726,7 +2726,7 @@ code {
   }
 
   .app-footer {
-    padding: 0 14px 84px;
+    padding: 0 14px calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-bottom-nav {
