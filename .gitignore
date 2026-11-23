@@ -81,10 +81,24 @@ web_modules/
 
 # dotenv environment variable files
 .env
+.env.*
+!.env.example
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+
+# Key & certificate files
+*.pem
+*.key
+
+# AI & editor local config
+.commandcode/
+.cursor/
+.claude/
+
+# Temporary Office lock files
+~$*
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
