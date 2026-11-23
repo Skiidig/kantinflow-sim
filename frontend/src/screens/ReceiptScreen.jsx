@@ -1,28 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, NetworkError, getItems, saveReceipt } from '../api.js';
+import { addDaysToCalendarDate, getOperationalDateString } from '../format.js';
 import { resolveIdempotencyKey } from '../idempotency.js';
 import Icon from '../components/Icon.jsx';
 
 const formFieldNames = ['itemId', 'batchCode', 'quantity', 'unitCost', 'receivedOn', 'expiresOn'];
 
-function toDateInputValue(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function initialForm(itemId = '') {
-  const today = new Date();
-  const expires = new Date(today);
-  expires.setDate(expires.getDate() + 7);
+  const today = getOperationalDateString();
   return {
     itemId,
     batchCode: '',
     quantity: '',
     unitCost: '',
-    receivedOn: toDateInputValue(today),
-    expiresOn: toDateInputValue(expires),
+    receivedOn: today,
+    expiresOn: addDaysToCalendarDate(today, 7),
   };
 }
 

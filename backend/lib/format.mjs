@@ -55,11 +55,39 @@ export function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 }
 
-export function toLocalDateString(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+export const OPERATIONAL_TIMEZONE = 'Asia/Makassar';
+const OPERATIONAL_UTC_OFFSET = '+08:00';
+
+const operationalDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: OPERATIONAL_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+export function toOperationalDateString(date = new Date()) {
+  const parts = operationalDateFormatter.formatToParts(date);
+  let year = '';
+  let month = '';
+  let day = '';
+  for (const part of parts) {
+    if (part.type === 'year') year = part.value;
+    else if (part.type === 'month') month = part.value;
+    else if (part.type === 'day') day = part.value;
+  }
   return `${year}-${month}-${day}`;
+}
+
+export function toLocalDateString(date = new Date()) {
+  return toOperationalDateString(date);
+}
+
+export function startOfOperationalDay(dateStr) {
+  return new Date(`${dateStr}T00:00:00.000${OPERATIONAL_UTC_OFFSET}`);
+}
+
+export function endOfOperationalDay(dateStr) {
+  return new Date(`${dateStr}T23:59:59.999${OPERATIONAL_UTC_OFFSET}`);
 }
 
 export function addDaysToDateString(dateStr, days) {

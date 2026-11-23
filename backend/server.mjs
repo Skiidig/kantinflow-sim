@@ -7,7 +7,7 @@ const {
   MONGODB_DB,
   JWT_SECRET,
   JWT_EXPIRES_IN = '8h',
-  PORT = '3001',
+  PORT = '3000',
   HOST = '0.0.0.0',
   CORS_ORIGIN = 'http://localhost:5173',
 } = process.env;

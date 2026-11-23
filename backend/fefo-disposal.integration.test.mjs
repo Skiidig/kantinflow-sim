@@ -200,4 +200,43 @@ test('FR-006 atomic FEFO usage and FR-007 batch disposal with admin-only cost re
   assert.equal(emptyReport.status, 200);
   assert.equal(emptyReport.body.data.summary.totalEvents, 0);
   assert.equal(emptyReport.body.data.summary.totalCost, '0');
+
+  const archivedItemId = new ObjectId();
+  const archivedBatchId = new ObjectId();
+  await db.collection('items').insertOne({
+    _id: archivedItemId,
+    code: 'ARSIP-DISP',
+    name: 'Barang Arsip Uji Disposal',
+    baseUnit: 'kotak',
+    minimumStock: Decimal128.fromString('2'),
+    quantityScale: 0,
+    isActive: false,
+    stockRevision: 4,
+  });
+  await db.collection('batches').insertOne({
+    _id: archivedBatchId,
+    itemId: archivedItemId,
+    batchCode: 'ARSIP-BATCH-01',
+    receivedOn: addDaysToDateString(today, -5),
+    expiresOn: addDaysToDateString(today, -1),
+    unitCost: Decimal128.fromString('3000'),
+    initialQuantity: Decimal128.fromString('2'),
+    remainingQuantity: Decimal128.fromString('2'),
+    recordedAt: new Date(),
+  });
+
+  const txCountBeforeArchivedDisposal = await db.collection('stockTransactions').countDocuments();
+  const archivedDisposal = await api
+    .post('/api/v1/stock/disposals')
+    .set('Authorization', `Bearer ${petugasToken}`)
+    .set('Idempotency-Key', 'dispose-archived-item')
+    .send({ batchId: archivedBatchId.toHexString(), quantity: '1', reason: 'Kedaluwarsa' });
+  assert.equal(archivedDisposal.status, 409);
+  assert.equal(archivedDisposal.body.error.code, 'ITEM_INACTIVE');
+
+  const archivedBatchAfter = await db.collection('batches').findOne({ _id: archivedBatchId });
+  const archivedItemAfter = await db.collection('items').findOne({ _id: archivedItemId });
+  assert.equal(archivedBatchAfter.remainingQuantity.toString(), '2');
+  assert.equal(archivedItemAfter.stockRevision, 4);
+  assert.equal(await db.collection('stockTransactions').countDocuments(), txCountBeforeArchivedDisposal);
 });

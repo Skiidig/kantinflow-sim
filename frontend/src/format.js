@@ -1,7 +1,47 @@
+export const OPERATIONAL_TIMEZONE = 'Asia/Makassar';
+
 const MONTHS_ID = [
   'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
   'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
 ];
+
+const operationalDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: OPERATIONAL_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const operationalDateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: OPERATIONAL_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function extractDateParts(formatter, date) {
+  const parts = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== 'literal') {
+      parts[part.type] = part.value;
+    }
+  }
+  return parts;
+}
+
+export function getOperationalDateString(date = new Date()) {
+  const { year, month, day } = extractDateParts(operationalDateFormatter, date);
+  return `${year}-${month}-${day}`;
+}
+
+export function addDaysToCalendarDate(dateStr, days) {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
 
 export function formatRupiah(value) {
   if (value === null || value === undefined || value === '') return 'Rp 0';
@@ -31,11 +71,12 @@ export function formatDateTimeId(isoStr) {
   if (!isoStr) return '—';
   const date = new Date(isoStr);
   if (Number.isNaN(date.valueOf())) return String(isoStr);
-  const day = date.getDate();
-  const month = MONTHS_ID[date.getMonth()];
-  const year = date.getFullYear();
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
+  const parts = extractDateParts(operationalDateTimeFormatter, date);
+  const day = Number(parts.day);
+  const month = MONTHS_ID[Number(parts.month) - 1];
+  const year = parts.year;
+  const hh = parts.hour === '24' ? '00' : parts.hour;
+  const mm = parts.minute;
   return `${day} ${month} ${year}, ${hh}:${mm}`;
 }
 

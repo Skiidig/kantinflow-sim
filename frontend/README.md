@@ -1,97 +1,68 @@
 # Frontend KantinFlow SIM
 
-React 19 + Vite untuk dua layar:
+Antarmuka web SPA berbasis **React 19 + Vite 8 + plain CSS Custom Properties** untuk seluruh alur operasional dan administrasi **KantinFlow SIM** (`FR-001` s.d. `FR-007`).
 
-1. **Masuk** — mengirim email/password ke `POST /api/v1/auth/login`.
-2. **Stok Masuk** — mengirim formulir ke `POST /api/v1/stock/receipts` dengan
-   Bearer token dari login dan `Idempotency-Key`.
+## 1. Konfigurasi Lokal
 
-## Konfigurasi
-
-Salin `.env.example` menjadi `.env`:
+Dari folder `frontend/`:
 
 ```powershell
 Copy-Item .env.example .env
+npm.cmd ci
 ```
 
 | Variabel | Keterangan |
 | --- | --- |
-| `VITE_DEMO_ITEM_ID` | `itemId` Susu Kotak dari `npm.cmd run seed:reset` di backend. |
-| `VITE_DEMO_ITEM_NAME` | Nama tampilan barang demo. |
-| `VITE_DEMO_ITEM_UNIT` | Satuan barang demo. |
-| `VITE_DEMO_EMAIL` | Email yang diprefill di layar Masuk. |
-| `VITE_API_BASE_URL` | Opsional; kosongkan untuk memakai proxy Vite. Isi hanya untuk origin yang sama/proxy karena backend belum memasang CORS. |
+| `VITE_API_BASE_URL` | Kosongkan saat pengembangan lokal agar request `/api` otomatis diteruskan melalui proxy Vite ke `http://127.0.0.1:3000`. Isi dengan URL origin backend (tanpa slash akhir) saat deployment produksi. |
 
-`itemId` bisa berubah bila database demo dibuat ulang. Jalankan seed, lalu
-perbarui `VITE_DEMO_ITEM_ID`.
+## 2. Menjalankan Aplikasi
 
-## Menjalankan
-
-Backend dan MongoDB harus aktif lebih dulu. Lihat panduan di
-`../backend/README.md`.
+Pastikan MongoDB Replica Set dan backend berjalan di port `3000` (atau gunakan `npm.cmd start` dari folder root untuk menyalakan semuanya sekaligus):
 
 ```powershell
-npm.cmd install
 npm.cmd run dev
 ```
 
-Buka `http://localhost:5173`.
+Aplikasi tersedia di **`http://localhost:5173`**. Proxy pengembangan pada `vite.config.js` meneruskan `/api` ke `http://127.0.0.1:3000`.
 
-Vite mem-proxy `/api` ke `http://127.0.0.1:3000`, jadi backend tidak perlu
-konfigurasi CORS untuk pengembangan. Binding backend tetap `127.0.0.1`.
+## 3. Cakupan Layar & Perilaku Utama
 
-## Uji manual
+Navigasi dikelola oleh custom History API router di `src/App.jsx` bersama `src/components/AppShell.jsx` yang menyesuaikan menu berdasarkan peran (`admin` vs `petugas`):
 
-Dari saldo 0:
+| Rute | Layar | Akses | Fungsi Utama |
+| --- | --- | --- | --- |
+| — | `LoginScreen.jsx` | Publik | Login JWT ke `POST /api/v1/auth/login` dan manajemen pesan sesi. |
+| `/dashboard` | `DashboardScreen.jsx` | `admin`, `petugas` | KPI persediaan, tabel stok menipis, batch mendekati kedaluwarsa (`H-3`/`H-7`/`H-14`), dan batch kedaluwarsa bersisa. |
+| `/items` | `ItemsScreen.jsx` | `admin`, `petugas` | Pencarian, filter status & stok menipis, pengurutan, pagination, modal detail batch FEFO, serta CRUD & hapus/arsip barang khusus `admin`. |
+| `/receipts` | `ReceiptScreen.jsx` | `admin`, `petugas` | Formulir penerimaan stok masuk idempoten (`Idempotency-Key`) dengan default tanggal operasional WITA (`Asia/Makassar`). |
+| `/usages` | `UsageScreen.jsx` | `admin`, `petugas` | Formulir pemakaian stok FEFO lintas batch dengan pratinjau urutan batch layak dan rincian alokasi. |
+| `/disposals` | `DisposalScreen.jsx` | `admin`, `petugas` | Pencatatan pembuangan stok per batch (hanya menampilkan barang aktif dan menangani penolakan `ITEM_INACTIVE`). |
+| `/transactions` | `TransactionsScreen.jsx` | `admin`, `petugas` | Riwayat mutasi stok kronologis dengan filter barang, jenis, dan rentang tanggal; kolom biaya hanya tampil untuk `admin`. |
+| `/users` | `UsersScreen.jsx` | `admin` | Daftar/filter akun, tambah akun baru, dan aktif/nonaktifkan akun (mencegah nonaktifkan akun sendiri). |
+| `/reports/disposals` | `DisposalReportScreen.jsx` | `admin` | Ringkasan biaya barang terbuang per barang, per alasan, dan rincian per transaksi. |
 
-1. Masuk dengan akun demo.
-2. Isi kode batch `SUSU-WEB-01`, jumlah `5`, harga `4500`, dan tanggal valid.
-3. Simpan. Kartu saldo harus menampilkan **5 kotak**.
-4. Ubah jumlah menjadi `0`, simpan lagi.
-5. Pesan `Jumlah harus lebih dari 0` muncul di bawah kolom Jumlah; isian lain
-   tetap dan saldo tetap 5.
+Perilaku teknis penting:
+- **Sesi & Auto-Logout:** Token disimpan di `sessionStorage`; respons `401` otomatis membersihkan sesi dan mengembalikan pengguna ke layar Masuk.
+- **Idempotensi & Anti Double-Submit:** Layar Stok Masuk, Pemakaian FEFO, dan Pembuangan menggunakan `resolveIdempotencyKey()` (`src/idempotency.js`) dan ref in-flight sehingga pengiriman ulang akibat gangguan jaringan tidak menggandakan data.
+- **Konsistensi Zona Waktu (`Asia/Makassar` / WITA):** `src/format.js` memformat seluruh timestamp transaksi (`formatDateTimeId`) dan nilai default tanggal operasional (`getOperationalDateString`) secara eksplisit pada zona waktu `Asia/Makassar`, sementara tanggal kalender `YYYY-MM-DD` (`formatDateId`) diproses tanpa pergeseran zona waktu.
 
-Jika ingin mengulang dari nol, jalankan `npm.cmd run seed:reset` di folder
-`backend`, lalu muat ulang halaman.
-
-## Perilaku pengiriman
-
-- Tombol dinonaktifkan saat request berjalan. Sebuah ref juga mencegah dua
-  request bila tombol terklik dua kali sebelum React sempat merender.
-- `Idempotency-Key` berupa UUID yang terikat pada isi formulir. Bila request
-  gagal karena jaringan atau server 5xx, tombol berubah menjadi **Coba lagi**
-  dan kunci yang sama dipakai ulang untuk isi yang sama.
-- Setelah sukses, mengirim isian yang persis sama tidak membuat request baru.
-  Ubah isian untuk mencatat penerimaan berikutnya.
-- Respons `400` dengan `fields.quantity` ditampilkan di bawah kolom Jumlah dan
-  fokus kembali ke kolom itu.
-- Token disimpan di `sessionStorage`; respons `401` saat menyimpan akan
-  mengakhiri sesi dan kembali ke layar Masuk.
-
-## Tes dan build
+## 4. Pengujian & Build Produksi
 
 ```powershell
-npm.cmd test
-npm.cmd run build
+npm.cmd test          # 7/7 unit test lulus (format Rupiah, tanggal & waktu WITA, lintas TZ, & idempotensi)
+npm.cmd run build     # Build produksi Vite ke frontend/dist/
+npm.cmd run preview   # Pratinjau hasil build produksi secara lokal
 ```
 
-`npm.cmd test` memakai test runner Node untuk memeriksa bahwa kunci idempotensi
-dipakai ulang hanya saat isi request sama.
+## 5. Struktur File Utama
 
-## Struktur
-
-| File | Isi |
+| File / Folder | Isi |
 | --- | --- |
-| `src/App.jsx` | Perpindahan layar dan sesi `sessionStorage`. |
-| `src/screens/LoginScreen.jsx` | Layar Masuk. |
-| `src/screens/ReceiptScreen.jsx` | Formulir Stok Masuk, error, dan kartu saldo. |
-| `src/api.js` | Pemanggilan login/penerimaan dan klasifikasi error. |
-| `src/idempotency.js` | Pemilihan kunci idempotensi berdasarkan isi request. |
-| `src/styles.css` | Tampilan responsif dua layar. |
-| `vite.config.js` | Proxy `/api` ke backend lokal. |
-
-## Batas tahap ini
-
-- Satu barang demo; daftar barang dinamis belum ada.
-- Belum ada layar riwayat atau pengambilan saldo awal.
-- Belum ada refresh token; token berakhir sesuai `JWT_EXPIRES_IN` backend.
+| `src/App.jsx` | Routing client-side, penjagaan peran (`ADMIN_ONLY_PATHS`), sesi `sessionStorage`, dan state toast. |
+| `src/api.js` | HTTP client `fetch`, manajemen Bearer token, handler `401`, serta klasifikasi `ApiError` & `NetworkError`. |
+| `src/format.js` & `src/format.test.js` | Formatter Rupiah, tanggal Indonesia, timestamp WITA, default tanggal operasional, dan unit test. |
+| `src/idempotency.js` & `src/idempotency.test.js` | Resolver `Idempotency-Key` berbasis fingerprint payload dan unit test. |
+| `src/components/` | `AppShell.jsx`, `Icon.jsx`, dan `ToastContainer.jsx`. |
+| `src/screens/` | 9 layar fitur (`Login`, `Dashboard`, `Items`, `Receipt`, `Usage`, `Disposal`, `Transactions`, `Users`, `DisposalReport`). |
+| `src/styles.css` | Stylesheet tunggal responsif berbasis CSS Custom Properties (tanpa Tailwind). |
+| `vite.config.js` & `vercel.json` | Proxy dev `/api` → `http://127.0.0.1:3000` dan SPA rewrite untuk Vercel. |

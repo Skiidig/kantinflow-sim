@@ -1,7 +1,11 @@
 import { ObjectId } from 'mongodb';
 import { ApiError } from '../api-error.mjs';
 import { absDecimal, addDecimals, mulDecimals } from '../lib/decimal.mjs';
-import { decimalToString } from '../lib/format.mjs';
+import {
+  decimalToString,
+  endOfOperationalDay,
+  startOfOperationalDay,
+} from '../lib/format.mjs';
 import { ROLES } from '../middleware/auth.mjs';
 
 const VALID_TYPES = new Set(['RECEIPT', 'USAGE', 'DISPOSAL']);
@@ -11,16 +15,6 @@ function isCalendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
-}
-
-function startOfLocalDay(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d, 0, 0, 0, 0);
-}
-
-function endOfLocalDay(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d, 23, 59, 59, 999);
 }
 
 export async function listTransactions(db, query, { role }) {
@@ -73,8 +67,8 @@ export async function listTransactions(db, query, { role }) {
 
   if (from || to) {
     match.recordedAt = {};
-    if (from) match.recordedAt.$gte = startOfLocalDay(from);
-    if (to) match.recordedAt.$lte = endOfLocalDay(to);
+    if (from) match.recordedAt.$gte = startOfOperationalDay(from);
+    if (to) match.recordedAt.$lte = endOfOperationalDay(to);
   }
 
   const transactions = db.collection('stockTransactions');

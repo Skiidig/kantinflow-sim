@@ -40,7 +40,12 @@ export default function DisposalScreen({ session, onToast }) {
     if (!silent) setItemsLoading(true);
     setItemsError('');
     try {
-      const response = await getItems({ sortBy: 'name', sortOrder: 'asc', limit: 100 });
+      const response = await getItems({
+        status: 'active',
+        sortBy: 'name',
+        sortOrder: 'asc',
+        limit: 100,
+      });
       const list = response.data ?? [];
       setItems(list);
       setSelectedItemId((prev) => {
@@ -53,7 +58,7 @@ export default function DisposalScreen({ session, onToast }) {
       setItemsError(
         err instanceof NetworkError
           ? 'Tidak dapat terhubung ke server.'
-          : 'Gagal memuat daftar barang.',
+          : 'Gagal memuat daftar barang aktif.',
       );
     } finally {
       setItemsLoading(false);
@@ -153,6 +158,8 @@ export default function DisposalScreen({ session, onToast }) {
           setFieldErrors({ quantity: message });
           setFormError(message);
           onToast?.({ type: 'error', title: 'Melebihi sisa batch', message });
+        } else if (err.code === 'ITEM_INACTIVE') {
+          setFormError('Barang ini sedang diarsipkan.');
         } else if (err.code === 'IDEMPOTENCY_CONFLICT') {
           setFormError('Isian berubah saat pengiriman ulang. Coba kirim kembali.');
         } else {

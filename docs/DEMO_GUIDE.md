@@ -31,7 +31,9 @@ Di terminal `backend/` yang sama:
 npm.cmd start
 ```
 
-Server API berjalan pada port sesuai `PORT` di `backend/.env` (default `http://127.0.0.1:3000`; bila menjalankan di port `3001` agar cocok dengan default variabel `{{baseUrl}}` pada koleksi Postman, cukup ubah `PORT=3001` di `backend/.env` dan target proxy di `frontend/vite.config.js`, atau sesuaikan `{{baseUrl}}` di Postman menjadi `http://127.0.0.1:3000`).
+Server API berjalan di **`http://127.0.0.1:3000`** (sesuai default `PORT=3000` pada `backend/.env.example`, proxy Vite di `frontend/vite.config.js`, dan variabel `{{baseUrl}}` pada koleksi Postman).
+
+*(Alternatif 1 perintah dari folder root `kantinflow-sim`: jalankan `npm.cmd start` untuk menyalakan MongoDB Replica Set `rs0`, Backend port `3000`, dan Frontend port `5173` sekaligus.)*
 
 ### Langkah 3 — Jalankan Frontend React
 Buka terminal kedua di folder `frontend/`:
@@ -94,12 +96,12 @@ Buka browser di **`http://localhost:5173`**.
 ```powershell
 cd backend
 npm.cmd run db:start
-npm.cmd test          # 15/15 unit & Supertest integration test (FR-001 s.d. FR-007 + RBAC 401/403)
+npm.cmd test          # 21/21 unit & Supertest integration test (FR-001 s.d. FR-007, guard barang arsip, konsistensi WITA, & RBAC 401/403)
 npm.cmd run benchmark # Benchmark 100 request/endpoint (target < 500 ms)
 npm.cmd run db:stop
 ```
 
 ### Menguji Koleksi Postman
 1. Impor file `docs/kantinflow.postman_collection.json` ke Postman.
-2. Pada tab **Variables** koleksi, atur `baseUrl` (default `http://localhost:3001`, sesuaikan dengan port backend Anda) dan isi `password` dari `backend/.env`.
+2. Pada tab **Variables** koleksi, pastikan `baseUrl` mengarah ke `http://localhost:3000` (default) dan isi `password` dari `backend/.env`.
 3. Jalankan request **Login Admin** terlebih dahulu — script test otomatis menyimpan JWT ke variabel `{{token}}` untuk seluruh request berikutnya.

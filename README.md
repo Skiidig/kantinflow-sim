@@ -16,8 +16,8 @@ Browser / React (Vite)  <--- REST API /api/v1 (JSON + JWT Bearer) --->  Node.js 
 
 | Lapisan | Teknologi | Peran Utama |
 | --- | --- | --- |
-| **Frontend** | React 19, Vite 8, CSS Responsif | Antarmuka mobile, tablet, dan desktop dengan navigasi berbasis peran (RBAC) dan notifikasi toast. |
-| **Backend** | Node.js, Express 5 | REST API `/api/v1`, validasi bisnis, transaksi atomik, dan proteksi RBAC (`401`/`403`). |
+| **Frontend** | React 19, Vite 8, CSS Responsif | Antarmuka mobile, tablet, dan desktop (`http://localhost:5173`) dengan navigasi berbasis peran (RBAC), format waktu `Asia/Makassar` (WITA), dan notifikasi toast. |
+| **Backend** | Node.js, Express 5 | REST API `/api/v1` (`http://127.0.0.1:3000`), validasi bisnis, transaksi atomik, kalkulasi tanggal operasional `Asia/Makassar` (WITA), dan proteksi RBAC (`401`/`403`). |
 | **Database** | MongoDB 7 (Replica Set `rs0`) | Penyimpanan koleksi `users`, `items`, `batches`, dan `stockTransactions` dengan transaksi atomik & `Decimal128`. |
 | **Keamanan** | JWT (HS256) + `bcryptjs` | Hash password Bcrypt, autentikasi Bearer Token, dan pemisahan hak akses `admin` vs `petugas`. |
 | **Pengujian** | Node Test Runner (`node:test`) + Supertest | Pengujian unit, integrasi API, rollback transaksi, *security matrix*, dan benchmark performa. |
@@ -43,8 +43,10 @@ Seluruh kebutuhan fungsional pada dokumen SRS/SDS telah selesai diimplementasika
 5. **FR-006 — Pemakaian Stok FEFO Atomik:**
    - Pemotongan otomatis batch layak dengan tanggal kedaluwarsa terdekat lintas batch (`POST /api/v1/stock/usages`), melewati batch kedaluwarsa, dan menolak (`409 INSUFFICIENT_USABLE_STOCK`) tanpa mengubah saldo jika stok layak tidak mencukupi.
 6. **FR-007 — Pembuangan Stok & Laporan Biaya Admin:**
-   - Pencatatan pembuangan jumlah & alasan per batch secara atomik (`POST /api/v1/stock/disposals`).
+   - Pencatatan pembuangan jumlah & alasan per batch secara atomik (`POST /api/v1/stock/disposals`), menolak barang yang sudah diarsipkan (`409 ITEM_INACTIVE`) dan menyaring barang arsip dari pilihan pembuangan.
    - Laporan ringkasan total kuantitas dan total biaya barang terbuang khusus `admin` (`GET /api/v1/reports/disposals`; peran `petugas` ditolak `403`).
+7. **Konsistensi Zona Waktu Operasional (`Asia/Makassar` / WITA, UTC+08:00):**
+   - Seluruh perhitungan tanggal operasional (`today` untuk H-3, H-0, dan FEFO), batas filter rentang tanggal (`from`/`to`), nilai default input tanggal, serta tampilan waktu transaksi di frontend maupun backend dikunci ke `Asia/Makassar`, independen dari zona waktu sistem server maupun perangkat pengguna.
 
 ---
 
@@ -102,8 +104,8 @@ npm.cmd run build
 ```
 
 ### Hasil Verifikasi Terakhir
-- **Backend Automated Tests (`node:test` + Supertest):** **15/15 tes lulus** (0 gagal, 0 dilewati) mencakup seluruh FR-001 s.d. FR-007, idempotensi, rollback transaksi atomik, *Security Matrix* (`401` pada 15 endpoint terproteksi & `403` pada 7 endpoint khusus admin), dan skenario *end-to-end* HTTP.
-- **Frontend Unit Tests & Build:** **5/5 unit test lulus** dan `vite build` produksi berhasil tanpa error.
+- **Backend Automated Tests (`node:test` + Supertest):** **21/21 tes lulus** (0 gagal, 0 dilewati, terverifikasi pada zona waktu host maupun `TZ=UTC`) mencakup seluruh FR-001 s.d. FR-007, idempotensi, rollback transaksi atomik, proteksi pembuangan barang arsip (`409 ITEM_INACTIVE`), konsistensi batas tengah malam WITA (`Asia/Makassar`), *Security Matrix* (`401` pada 15 endpoint terproteksi & `403` pada 7 endpoint khusus admin), dan skenario *end-to-end* HTTP.
+- **Frontend Unit Tests & Build:** **7/7 unit test lulus** (terverifikasi pada zona waktu host maupun `TZ=UTC`) dan `vite build` produksi berhasil tanpa error maupun warning.
 - **API Performance Benchmark (`100` barang, `300` batch, `200` transaksi; `100` request/endpoint, konkurensi `10`; target `< 500 ms`):**
 
 | Endpoint | Min | Avg | P95 | Max | Target (`< 500 ms`) |
@@ -116,8 +118,7 @@ npm.cmd run build
 
 ## Dokumentasi & Tautan Proyek
 
-- **Dokumen SRS & SDS Final:** [`docs/KantinFlow_SRS_SDS_Web.docx`](docs/KantinFlow_SRS_SDS_Web.docx)
-- **Panduan Demo End-to-End (Hari Senin):** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
+- **Panduan Demo End-to-End:** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
 - **Koleksi Postman v2.1 (19 Request):** [`docs/kantinflow.postman_collection.json`](docs/kantinflow.postman_collection.json)
 - **Published Postman Documentation:** [KantinFlow SIM API Docs (Postman)](https://documenter.getpostman.com/view/60251527/2sBYPv2XzP)
 - **GitHub Projects Board:** [KantinFlow SIM — Project #1](https://github.com/users/Skiidig/projects/1)

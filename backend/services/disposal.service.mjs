@@ -13,7 +13,9 @@ import {
 import {
   canonicalDecimal,
   decimalToString,
+  endOfOperationalDay,
   isNonNegativeDecimalString,
+  startOfOperationalDay,
   toLocalDateString,
 } from '../lib/format.mjs';
 
@@ -24,16 +26,6 @@ function isCalendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
-}
-
-function startOfLocalDay(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d, 0, 0, 0, 0);
-}
-
-function endOfLocalDay(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d, 23, 59, 59, 999);
 }
 
 export function validateDisposal(body) {
@@ -99,6 +91,7 @@ export async function recordDisposal({ client, db, actorId, key, body, today = t
         { session },
       );
       if (!item) throw new ApiError(404, 'ITEM_NOT_FOUND');
+      if (item.isActive === false) throw new ApiError(409, 'ITEM_INACTIVE');
 
       const batch = await batches.findOne({ _id: batchId }, { session });
       if (!batch) throw new ApiError(404, 'BATCH_NOT_FOUND');
@@ -216,8 +209,8 @@ export async function getDisposalReport(db, query) {
 
   if (from || to) {
     match.recordedAt = {};
-    if (from) match.recordedAt.$gte = startOfLocalDay(from);
-    if (to) match.recordedAt.$lte = endOfLocalDay(to);
+    if (from) match.recordedAt.$gte = startOfOperationalDay(from);
+    if (to) match.recordedAt.$lte = endOfOperationalDay(to);
   }
 
   const docs = await db.collection('stockTransactions')
