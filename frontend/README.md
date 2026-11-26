@@ -1,68 +1,69 @@
-# Frontend KantinFlow SIM
+# KantinFlow SIM — Frontend SPA
 
-Antarmuka web SPA berbasis **React 19 + Vite 8 + plain CSS Custom Properties** untuk seluruh alur operasional dan administrasi **KantinFlow SIM** (`FR-001` s.d. `FR-007`).
+Single-page web interface built with **React 19, Vite 8, and CSS Custom Properties** for all operational and administrative workflows in **KantinFlow SIM**.
 
-## 1. Konfigurasi Lokal
+## 1. Local Setup
 
-Dari folder `frontend/`:
+From the `frontend/` directory:
 
 ```powershell
 Copy-Item .env.example .env
 npm.cmd ci
 ```
 
-| Variabel | Keterangan |
+| Variable | Description |
 | --- | --- |
-| `VITE_API_BASE_URL` | Kosongkan saat pengembangan lokal agar request `/api` otomatis diteruskan melalui proxy Vite ke `http://127.0.0.1:3000`. Isi dengan URL origin backend (tanpa slash akhir) saat deployment produksi. |
+| `VITE_API_BASE_URL` | Leave empty during local development so `/api` requests proxy through Vite to `http://127.0.0.1:3000`. Set to the deployed backend origin (without trailing slash) in production. |
 
-## 2. Menjalankan Aplikasi
+## 2. Running Locally
 
-Pastikan MongoDB Replica Set dan backend berjalan di port `3000` (atau gunakan `npm.cmd start` dari folder root untuk menyalakan semuanya sekaligus):
+Ensure MongoDB Replica Set and the backend API are running on port `3000` (or run `npm.cmd start` from the repository root to launch all services together):
 
 ```powershell
 npm.cmd run dev
 ```
 
-Aplikasi tersedia di **`http://localhost:5173`**. Proxy pengembangan pada `vite.config.js` meneruskan `/api` ke `http://127.0.0.1:3000`.
+Open **`http://localhost:5173`**. The Vite dev server (`vite.config.js`) forwards `/api` requests to `http://127.0.0.1:3000`.
 
-## 3. Cakupan Layar & Perilaku Utama
+## 3. Screens & Navigation
 
-Navigasi dikelola oleh custom History API router di `src/App.jsx` bersama `src/components/AppShell.jsx` yang menyesuaikan menu berdasarkan peran (`admin` vs `petugas`):
+Client-side routing is handled by a lightweight History API router in `src/App.jsx` paired with `src/components/AppShell.jsx`, dynamically adjusting navigation items by user role (`admin` vs `petugas`):
 
-| Rute | Layar | Akses | Fungsi Utama |
+| Route | Screen | Access | Primary Function |
 | --- | --- | --- | --- |
-| — | `LoginScreen.jsx` | Publik | Login JWT ke `POST /api/v1/auth/login` dan manajemen pesan sesi. |
-| `/dashboard` | `DashboardScreen.jsx` | `admin`, `petugas` | KPI persediaan, tabel stok menipis, batch mendekati kedaluwarsa (`H-3`/`H-7`/`H-14`), dan batch kedaluwarsa bersisa. |
-| `/items` | `ItemsScreen.jsx` | `admin`, `petugas` | Pencarian, filter status & stok menipis, pengurutan, pagination, modal detail batch FEFO, serta CRUD & hapus/arsip barang khusus `admin`. |
-| `/receipts` | `ReceiptScreen.jsx` | `admin`, `petugas` | Formulir penerimaan stok masuk idempoten (`Idempotency-Key`) dengan default tanggal operasional WITA (`Asia/Makassar`). |
-| `/usages` | `UsageScreen.jsx` | `admin`, `petugas` | Formulir pemakaian stok FEFO lintas batch dengan pratinjau urutan batch layak dan rincian alokasi. |
-| `/disposals` | `DisposalScreen.jsx` | `admin`, `petugas` | Pencatatan pembuangan stok per batch (hanya menampilkan barang aktif dan menangani penolakan `ITEM_INACTIVE`). |
-| `/transactions` | `TransactionsScreen.jsx` | `admin`, `petugas` | Riwayat mutasi stok kronologis dengan filter barang, jenis, dan rentang tanggal; kolom biaya hanya tampil untuk `admin`. |
-| `/users` | `UsersScreen.jsx` | `admin` | Daftar/filter akun, tambah akun baru, dan aktif/nonaktifkan akun (mencegah nonaktifkan akun sendiri). |
-| `/reports/disposals` | `DisposalReportScreen.jsx` | `admin` | Ringkasan biaya barang terbuang per barang, per alasan, dan rincian per transaksi. |
+| — | `LoginScreen.jsx` | Public | JWT login (`POST /api/v1/auth/login`) and session notices. |
+| `/dashboard` | `DashboardScreen.jsx` | `admin`, `petugas` | Inventory KPIs, low-stock table, near-expiry batches (`H-3`/`H-7`/`H-14`), and expired stock awaiting disposal. |
+| `/items` | `ItemsScreen.jsx` | `admin`, `petugas` | Search, status & low-stock filters, sorting, pagination, FEFO batch detail modal, and admin item CRUD / safe archive. |
+| `/receipts` | `ReceiptScreen.jsx` | `admin`, `petugas` | Idempotent stock-in form (`Idempotency-Key`) with default operational date in `Asia/Makassar` (WITA). |
+| `/usages` | `UsageScreen.jsx` | `admin`, `petugas` | Cross-batch FEFO usage form with ordered batch preview and allocation confirmation card. |
+| `/disposals` | `DisposalScreen.jsx` | `admin`, `petugas` | Per-batch disposal form (active items only, expired batch highlighting, reason presets, `ITEM_INACTIVE` guard). |
+| `/transactions` | `TransactionsScreen.jsx` | `admin`, `petugas` | Chronological audit log with item, type, and date-range filters; cost columns visible only to `admin`. |
+| `/users` | `UsersScreen.jsx` | `admin` | Account directory, role/status filtering, user creation, and active-status toggle (blocks self-deactivation). |
+| `/reports/disposals` | `DisposalReportScreen.jsx` | `admin` | Waste-cost KPIs and breakdowns by item, by reason, and by disposal event. |
 
-Perilaku teknis penting:
-- **Sesi & Auto-Logout:** Token disimpan di `sessionStorage`; respons `401` otomatis membersihkan sesi dan mengembalikan pengguna ke layar Masuk.
-- **Idempotensi & Anti Double-Submit:** Layar Stok Masuk, Pemakaian FEFO, dan Pembuangan menggunakan `resolveIdempotencyKey()` (`src/idempotency.js`) dan ref in-flight sehingga pengiriman ulang akibat gangguan jaringan tidak menggandakan data.
-- **Konsistensi Zona Waktu (`Asia/Makassar` / WITA):** `src/format.js` memformat seluruh timestamp transaksi (`formatDateTimeId`) dan nilai default tanggal operasional (`getOperationalDateString`) secara eksplisit pada zona waktu `Asia/Makassar`, sementara tanggal kalender `YYYY-MM-DD` (`formatDateId`) diproses tanpa pergeseran zona waktu.
+### Key Frontend Behaviors
 
-## 4. Pengujian & Build Produksi
+- **Session & Auto-Logout:** Auth sessions are stored in `sessionStorage`; any `401` API response automatically clears the session and returns the user to the login screen.
+- **Idempotency & Double-Submit Protection:** Receipt, FEFO usage, and disposal screens use `resolveIdempotencyKey()` (`src/idempotency.js`) and an in-flight ref guard so retrying after a network interruption never duplicates stock movements.
+- **WITA Timezone Consistency (`Asia/Makassar`):** `src/format.js` formats transaction timestamps (`formatDateTimeId`) and computes operational date defaults (`getOperationalDateString`) explicitly in `Asia/Makassar`, while calendar dates (`YYYY-MM-DD`) render without timezone shifting.
+
+## 4. Testing & Production Build
 
 ```powershell
-npm.cmd test          # 7/7 unit test lulus (format Rupiah, tanggal & waktu WITA, lintas TZ, & idempotensi)
-npm.cmd run build     # Build produksi Vite ke frontend/dist/
-npm.cmd run preview   # Pratinjau hasil build produksi secara lokal
+npm.cmd test          # 8/8 unit tests (IDR currency, WITA date/time & cross-TZ checks, date ranges, labels, idempotency)
+npm.cmd run build     # Production Vite build into frontend/dist/
+npm.cmd run preview   # Preview the production build locally
 ```
 
-## 5. Struktur File Utama
+## 5. Project Layout
 
-| File / Folder | Isi |
+| File / Directory | Responsibility |
 | --- | --- |
-| `src/App.jsx` | Routing client-side, penjagaan peran (`ADMIN_ONLY_PATHS`), sesi `sessionStorage`, dan state toast. |
-| `src/api.js` | HTTP client `fetch`, manajemen Bearer token, handler `401`, serta klasifikasi `ApiError` & `NetworkError`. |
-| `src/format.js` & `src/format.test.js` | Formatter Rupiah, tanggal Indonesia, timestamp WITA, default tanggal operasional, dan unit test. |
-| `src/idempotency.js` & `src/idempotency.test.js` | Resolver `Idempotency-Key` berbasis fingerprint payload dan unit test. |
-| `src/components/` | `AppShell.jsx`, `Icon.jsx`, dan `ToastContainer.jsx`. |
-| `src/screens/` | 9 layar fitur (`Login`, `Dashboard`, `Items`, `Receipt`, `Usage`, `Disposal`, `Transactions`, `Users`, `DisposalReport`). |
-| `src/styles.css` | Stylesheet tunggal responsif berbasis CSS Custom Properties (tanpa Tailwind). |
-| `vite.config.js` & `vercel.json` | Proxy dev `/api` → `http://127.0.0.1:3000` dan SPA rewrite untuk Vercel. |
+| `src/App.jsx` | Client-side routing, role guards (`ADMIN_ONLY_PATHS`), `sessionStorage` session state, and toast queue. |
+| `src/api.js` | `fetch` API client, Bearer token injection, `401` callback hook, `ApiError` & `NetworkError` classification. |
+| `src/format.js` & `src/format.test.js` | IDR formatting, Indonesian calendar dates, WITA timestamps, operational date defaults, date-range validation, and unit tests. |
+| `src/idempotency.js` & `src/idempotency.test.js` | Payload-fingerprinted `Idempotency-Key` resolver and unit tests. |
+| `src/components/` | `AppShell.jsx`, `Icon.jsx` (custom inline SVGs), and `ToastContainer.jsx`. |
+| `src/screens/` | 9 feature screens (`Login`, `Dashboard`, `Items`, `Receipt`, `Usage`, `Disposal`, `Transactions`, `Users`, `DisposalReport`). |
+| `src/styles.css` | Responsive single stylesheet built on CSS Custom Properties (no external CSS framework). |
+| `vite.config.js` & `vercel.json` | Dev proxy (`/api` → `http://127.0.0.1:3000`) and Vercel SPA fallback rewrite. |
